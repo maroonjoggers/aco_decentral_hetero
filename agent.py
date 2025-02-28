@@ -1,5 +1,6 @@
 # agent.py
 import numpy as np
+from environment import Environment as environment
 
 class Agent:
     def __init__(self, agent_id, initial_pose, traits):

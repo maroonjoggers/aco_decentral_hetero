@@ -1,5 +1,6 @@
 # environment.py
 import numpy as np
+from agent import Agent
 import uuid # For generating unique IDs for pheromones
 
 class Environment:
