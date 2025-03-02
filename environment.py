@@ -19,7 +19,7 @@ class Environment:
         """
         self.boundaries = boundary_points # [x_min, x_max, y_min, y_max]
         self.home_location = np.array(home_location) # [x, y]
-        self.food_locations = [np.array(loc) for loc in food_locations] # List of [x, y]
+        self.food_locations = [np.array(loc) for loc in food_locations] # List of [x, y]    #TODO: Why is this different than obstacles and hazards? If its passed as a list then why are we parsing the list just to build a new one?
         self.obstacle_locations = obstacle_locations # List of obstacle definitions
         self.hazard_locations = hazard_locations # List of hazard definitions
         self.pheromones = [] # List to store pheromone objects in the environment
@@ -46,7 +46,7 @@ class Environment:
             profile_name = profiles[i]
             traits = agent_traits_profiles[profile_name] # Get traits for this profile
             for _ in range(agents_per_profile): # Create agents for this profile
-                initial_pose = self.get_random_pose_in_bounds() # Helper function (below)
+                initial_pose = self.get_random_pose_in_bounds() # Helper function (below)       #TODO: This doesn't make sense, we don't want to initalize the bots randomly throughout the env. See notes in function
                 agent = Agent(agent_id=agent_count, initial_pose=initial_pose, traits=traits)
                 self.agents.append(agent)
                 agent_count += 1
@@ -57,8 +57,8 @@ class Environment:
         for _ in range(remaining_agents):
             profile_name = profiles[profile_index]
             traits = agent_traits_profiles[profile_name]
-            initial_pose = self.get_random_pose_in_bounds()
-            agent = Agent(agent_id=agent_count, initial_pose=initial_pose, traits=traits)
+            initial_pose = self.get_random_pose_in_bounds()                                     #TODO: same note as get_random_pose_in_bounds as stated above
+            agent = Agent(agent_id=agent_count, initial_pose=initial_pose, traits=traits)       
             self.agents.append(agent)
             agent_count += 1
             profile_index = (profile_index + 1) % num_profiles # Cycle through profiles
@@ -71,6 +71,10 @@ class Environment:
         Returns:
             numpy.ndarray: Random pose [x, y, theta].
         """
+        #TODO: A better replacement for this would be to distribute them evenely but closely at or very near the home location. Envision 2 (somewhat conflicting) goals for this:
+        # 1. Get all agents IC's to start as close to the home location as possible
+        # 2. No 2 agents' IC's should be too close together
+
         x_min, x_max, y_min, y_max = self.boundaries
         x = np.random.uniform(x_min, x_max)
         y = np.random.uniform(y_min, y_max)
@@ -164,7 +168,7 @@ class Environment:
             bool: True if obstacles are nearby, False otherwise.
         """
         # --- Obstacle detection logic using obstacle_locations (shapes and vertices) ---
-        # IMPLEMENTATION NEEDED - Placeholder for now
+        # TODO: IMPLEMENTATION NEEDED - Placeholder for now
         return False # Placeholder - Replace with actual obstacle detection
 
 
@@ -180,7 +184,7 @@ class Environment:
             bool: True if hazards are nearby, False otherwise.
         """
         # --- Hazard detection logic using hazard_locations (shapes and vertices) ---
-        # IMPLEMENTATION NEEDED - Placeholder for now
+        # TODO: IMPLEMENTATION NEEDED - Placeholder for now
         return False # Placeholder - Replace with actual hazard detection
 
 
@@ -316,7 +320,7 @@ class Pheromone:
         self.agent_id = agent_id # ID of agent that created it
         self.type = type
         self.location = np.array(location) # [x, y]
-        self.direction = direction # Orientation when laid
+        self.direction = direction # Orientation when laid  #TODO: How is this defined? Is it a theta? Maybe it would be better to just have an x & y component
         self.strength = strength # Initial and current strength
         self.decay_rate = decay_rate # Decay rate per timestep
 

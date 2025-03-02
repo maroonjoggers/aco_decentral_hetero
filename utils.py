@@ -13,7 +13,7 @@ OBSTACLE_LOCATIONS = [] # Define obstacles as needed (shapes and vertices) - Exa
 HAZARD_LOCATIONS = [] # Define hazards as needed (shapes and vertices) - Example: Areas to avoid
 
 # Agent parameters
-NUM_AGENTS = 10 # Total number of agents in the simulation
+NUM_AGENTS = 10 # TODO: This needs to be the MAX agents in the environment, since even the "dead" agents are still in the experiment
 
 
 # --- Heterogeneous Agent Trait Profiles ---
