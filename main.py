@@ -13,7 +13,7 @@ from controller import Controller
 
 # --- 1. Robotarium Initialization ---
 # Initialize Robotarium with parameters from utils.py
-r = robotarium.Robotarium(number_of_robots=NUM_AGENTS, show_figure=True, initial_conditions=np.zeros((3, NUM_AGENTS)), sim_in_real_time=True) # Initial conditions will be set by Environment
+# r = robotarium.Robotarium(number_of_robots=NUM_AGENTS, show_figure=True, initial_conditions=np.zeros((3, NUM_AGENTS)), sim_in_real_time=True) # Initial conditions will be set by Environment
 
 # Instantiate SI to Uni dynamics and SI position controller (for potential leader or centralized elements later)
 si_to_uni_dyn = create_si_to_uni_dynamics() # or create_si_to_uni_dynamics_with_backwards_motion() if needed
@@ -43,7 +43,9 @@ controller = Controller(env)
 
 # --- 4. Set Initial Poses in Robotarium ---
 initial_poses = env.get_agent_poses() # Get initial poses from Environment (randomly initialized)
-r.set_poses(initial_poses) # Set initial poses in Robotarium
+# r.set_poses(initial_poses) # Set initial poses in Robotarium
+r = robotarium.Robotarium(number_of_robots=NUM_AGENTS, show_figure=True, initial_conditions=initial_poses, sim_in_real_time=True) # Initial conditions will be set by Environment
+
 
 
 # --- 5. Run Simulation Loop ---
@@ -54,12 +56,16 @@ for k in range(iterations):
     # a) Run Controller Step - Decentralized ACO velocity calculation
     agent_velocities_si = controller.run_step() # Get SI velocities from Controller
 
+    r_poses = r.get_poses()
+
     # b) Apply Barrier Certificates - Ensure safety (collision avoidance, boundary constraints)
     safe_velocities_si = si_barrier_cert(agent_velocities_si, env.get_agent_poses()[:2,:]) # Barrier certificate application
+    # safe_velocities_si = si_barrier_cert(agent_velocities_si, r_poses[:2]) # Barrier certificate application
 
 
     # c) Convert SI velocities to Unicycle Velocities (Robotarium-compatible)
     agent_velocities_uni = si_to_uni_dyn(safe_velocities_si, env.get_agent_poses()) # SI to Uni velocity transformation
+    # agent_velocities_uni = si_to_uni_dyn(safe_velocities_si, r_poses) # SI to Uni velocity transformation
 
 
     # d) Set Velocities in Robotarium - Command robots to move
