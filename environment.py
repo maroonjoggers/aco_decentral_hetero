@@ -228,6 +228,9 @@ class Environment:
                         break
                 if not is_known_pheromone:
                     nearby_pheromones.append(pheromone) # Add only new pheromones
+
+        print(f"Agent at {agent_location} detected {len(nearby_pheromones)} pheromones")
+
         return nearby_pheromones
 
 
@@ -283,7 +286,7 @@ class Environment:
                 new_pose[1] = y_max
                 velocity[1] = 0
 
-
+            print(f"Agent {agent.id} moved from {current_pose} to {new_pose}")
             agent.set_pose(new_pose) # Update agent's pose
 
 

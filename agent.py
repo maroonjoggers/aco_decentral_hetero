@@ -1,6 +1,5 @@
 # agent.py
 import numpy as np
-#from environment import Environment as environment
 import environment
 
 class Agent:
@@ -25,6 +24,11 @@ class Agent:
         self.initial_pheromone_strength = traits.get('initial_pheromone_strength')
         self.communication_radius = traits.get('communication_radius')
         self.pheromone_decay_rate = traits.get('pheromone_decay_rate') # New trait
+
+        self.motion_update_interval = np.random.randint(5, 20)  # Update motion every 5-20 steps
+        self.motion_update_counter = 0  # Counter to track updates
+        self.current_velocity = np.array([0.0, 0.0])  # Stores last computed velocity
+
 
     def check_environment(self, environment):
         """
@@ -104,6 +108,9 @@ class Agent:
                 decay_rate = self.pheromone_decay_rate
             )
             environment.add_pheromone(pheromone) # Add to environment's pheromone list
+        
+        if pheromone_type is not None:
+            print(f"Agent {self.id} laying {pheromone_type} pheromone at {self.pose[:2]}")
 
 
         # --- Pheromone Decay for pheromones in agent's map ---
@@ -182,6 +189,13 @@ class Agent:
         if np.linalg.norm(resultant_vector) > 0:
             resultant_vector = resultant_vector / np.linalg.norm(resultant_vector)
 
+        # 4. Add probabilistic element for exploration (e.g., random deviation) - IMPLEMENTATION NEEDED
+        if np.linalg.norm(resultant_vector) < 1e-3:
+            random_angle = np.random.uniform(0, 2 * np.pi)  # Pick a random direction
+            resultant_vector = np.array([np.cos(random_angle), np.sin(random_angle)]) *2  # Small step
+            print(f"Agent {self.id} using random movement: {resultant_vector}")
+
+        velocity_input = resultant_vector
         # 4. Add probabilistic element for exploration (e.g., random deviation)
         # TODO: IMPLEMENTATION NEEDED
         velocity_input = resultant_vector # Placeholder - replace with probabilistic ACO velocity
