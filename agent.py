@@ -1,6 +1,7 @@
 # agent.py
 import numpy as np
-# from environment import Environment as environment
+#from environment import Environment as environment
+import environment
 
 class Agent:
     def __init__(self, agent_id, initial_pose, traits):
@@ -268,7 +269,7 @@ class Agent:
         """
         #TODO: Probably want to do this on a time basis? Could updated by 0.033 seconds each robotarium iteration
 
-        self.age += 1
+        self.age += 0.033
 
 
     def set_pose(self, new_pose):

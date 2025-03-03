@@ -13,7 +13,13 @@ OBSTACLE_LOCATIONS = [] # Define obstacles as needed (shapes and vertices) - Exa
 HAZARD_LOCATIONS = [] # Define hazards as needed (shapes and vertices) - Example: Areas to avoid
 
 # Agent parameters
-NUM_AGENTS = 10 # TODO: This needs to be the MAX agents in the environment, since even the "dead" agents are still in the experiment
+NUM_AGENTS = 5 # TODO: This needs to be the MAX agents in the environment, since even the "dead" agents are still in the experiment
+
+# Experiment Ends when it hts this maxout time (seconds)
+MAX_TIME = 400
+
+# INITAL CONDITIONS
+INTER_AGENT_DIST = 0.30
 
 
 # --- Heterogeneous Agent Trait Profiles ---
@@ -54,6 +60,48 @@ def calculate_distance(point1, point2):
         float: Euclidean distance.
     """
     return np.linalg.norm(np.array(point1) - np.array(point2))
+
+# Determine the arrangement of Inital bots
+def determineInitalConditions():
+    '''
+    Bots should be placed with the following attributes
+        Shape --> Hexagonal Lattice
+        Centered about home location
+        Set distance between agents
+        Random Orientations
+
+    Returns:
+        3xN numpy array which represents the IC's of each bot
+    '''
+
+    positions = []
+    layers = 0
+
+    while len(positions) < NUM_AGENTS:
+        if layers == 0:
+            positions.append((HOME_LOCATION[0], HOME_LOCATION[1]))  # Center bot
+        else:
+            for i in range(6):  # 6 directions around the hexagon
+                for j in range(layers):
+                    angle = np.pi / 3 * i  # 60-degree increments
+                    x_offset = (layers - j) * INTER_AGENT_DIST * np.cos(angle) + j * INTER_AGENT_DIST * np.cos(angle + np.pi / 3)
+                    y_offset = (layers - j) * INTER_AGENT_DIST * np.sin(angle) + j * INTER_AGENT_DIST * np.sin(angle + np.pi / 3)
+                    positions.append((HOME_LOCATION[0] + x_offset, HOME_LOCATION[1] + y_offset))
+                    if len(positions) >= NUM_AGENTS:
+                        break
+                if len(positions) >= NUM_AGENTS:
+                    break
+        layers += 1
+
+    # Convert to numpy array
+    positions = np.array(positions[:NUM_AGENTS]).T  # Shape (2, N)
+
+    # Generate random orientations (-pi to pi)
+    orientations = np.random.uniform(-np.pi, np.pi, NUM_AGENTS).reshape(1, NUM_AGENTS)  # Shape (1, N)
+
+    # Stack positions and orientations
+    return np.vstack((positions, orientations))  # Shape (3, N)
+    
 
 
 # --- Functions to Generate Graph Laplacians (if needed for communication or control) ---

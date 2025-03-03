@@ -4,7 +4,7 @@ from agent import Agent
 import uuid # For generating unique IDs for pheromones
 
 class Environment:
-    def __init__(self, boundary_points, home_location, food_locations, obstacle_locations, hazard_locations, num_agents, agent_traits_profiles):
+    def __init__(self, boundary_points, home_location, food_locations, obstacle_locations, hazard_locations, num_agents, agent_traits_profiles, agent_ICs):
         """
         Initialize the Environment.
 
@@ -26,10 +26,10 @@ class Environment:
         self.agents = [] # List to store Agent objects
         self.agent_traits_profiles = agent_traits_profiles # Store trait profiles
 
-        self.initialize_agents(num_agents, agent_traits_profiles)
+        self.initialize_agents(num_agents, agent_traits_profiles, agent_ICs)
 
 
-    def initialize_agents(self, num_agents, agent_traits_profiles):
+    def initialize_agents(self, num_agents, agent_traits_profiles, agent_ICs):
         """
         Initialize agents with heterogeneous traits and random initial poses within boundaries.
 
@@ -46,7 +46,10 @@ class Environment:
             profile_name = profiles[i]
             traits = agent_traits_profiles[profile_name] # Get traits for this profile
             for _ in range(agents_per_profile): # Create agents for this profile
-                initial_pose = self.get_random_pose_in_bounds() # Helper function (below)       #TODO: This doesn't make sense, we don't want to initalize the bots randomly throughout the env. See notes in function
+                #initial_pose = self.get_random_pose_in_bounds() # Helper function (below)       #TODO: This doesn't make sense, we don't want to initalize the bots randomly throughout the env. See notes in function
+
+                initial_pose = agent_ICs[:,agent_count]         #NEW IC HANDLING
+
                 agent = Agent(agent_id=agent_count, initial_pose=initial_pose, traits=traits)
                 self.agents.append(agent)
                 agent_count += 1
@@ -57,11 +60,24 @@ class Environment:
         for _ in range(remaining_agents):
             profile_name = profiles[profile_index]
             traits = agent_traits_profiles[profile_name]
-            initial_pose = self.get_random_pose_in_bounds()                                     #TODO: same note as get_random_pose_in_bounds as stated above
+            #initial_pose = self.get_random_pose_in_bounds()                                     #TODO: same note as get_random_pose_in_bounds as stated above
+
+            initial_pose = agent_ICs[:,agent_count]         #NEW IC HANDLING
+
             agent = Agent(agent_id=agent_count, initial_pose=initial_pose, traits=traits)       
             self.agents.append(agent)
             agent_count += 1
             profile_index = (profile_index + 1) % num_profiles # Cycle through profiles
+
+    def updatePoses(self, agent_Pos_array):
+        '''
+        Cycle through the agents based on their ID number and tell them what their new pose is
+        This info comes directly from the robotarium
+        '''
+
+        for idx, agent in enumerate(self.agents):
+            agent.pose = agent_Pos_array[:, idx]
+
 
 
     def get_random_pose_in_bounds(self):
@@ -235,6 +251,7 @@ class Environment:
         return neighbors
 
 
+    #UNUSED - DO NOT USE
     def update_agent_poses(self, agent_velocities):
         """
         Update agents' poses based on provided velocities (Single Integrator) and environment boundaries.
@@ -320,7 +337,7 @@ class Pheromone:
         self.agent_id = agent_id # ID of agent that created it
         self.type = type
         self.location = np.array(location) # [x, y]
-        self.direction = direction # Orientation when laid  #TODO: How is this defined? Is it a theta? Maybe it would be better to just have an x & y component
+        self.direction = direction # (global) Theta relative to the positive x-axis
         self.strength = strength # Initial and current strength
         self.decay_rate = decay_rate # Decay rate per timestep
 

@@ -13,7 +13,8 @@ from controller import Controller
 
 # --- 1. Robotarium Initialization ---
 # Parameters from utils.py
-r = robotarium.Robotarium(number_of_robots=NUM_AGENTS, show_figure=True, initial_conditions=np.zeros((3, NUM_AGENTS)), sim_in_real_time=True)
+initalConditions = determineInitalConditions()
+r = robotarium.Robotarium(number_of_robots=NUM_AGENTS, show_figure=True, initial_conditions=initalConditions, sim_in_real_time=True)
 
 #TODO: Notes on above line initialization
 # 1. See notes on NUM_AGENTS in utily.py --> Needs to be max total possible alive at any one point
@@ -28,7 +29,6 @@ si_position_controller = create_si_position_controller() # Example controller - 
 # Barrier certificate for single integrator dynamics - adjust parameters as needed
 si_barrier_cert = create_single_integrator_barrier_certificate_with_boundary(barrier_gain=100, safety_radius=0.2) # Example parameters
 
-
 # --- 3. Initialize Environment and Controller ---
 # Instantiate Environment with parameters from utils.py
 env = Environment(
@@ -38,7 +38,8 @@ env = Environment(
     obstacle_locations=OBSTACLE_LOCATIONS,
     hazard_locations=HAZARD_LOCATIONS,
     num_agents=NUM_AGENTS,
-    agent_traits_profiles=AGENT_TRAIT_PROFILES
+    agent_traits_profiles=AGENT_TRAIT_PROFILES,
+    agent_ICs = initalConditions
 )
 #TODO: The above line will run the self.initialize_agents() function in the init of the Environment() class, see that
 
@@ -50,8 +51,8 @@ controller = Controller(env)
 #TODO: This is all a mess. There is no such thing as r.set_poses. The below 2 lines can basically just go away. We don't need a separate function to get poses because that's part of the robotarium functionality
 # - What we may or may not need is a function to take what the robotarium gives us as the pose info and transform it for our uses
 
-initial_poses = env.get_agent_poses() # Get initial poses from Environment (randomly initialized)
-r.set_poses(initial_poses) # Set initial poses in Robotarium
+#initial_poses = env.get_agent_poses() # Get initial poses from Environment (randomly initialized)
+#r.set_poses(initial_poses) # Set initial poses in Robotarium
 
 
 # --- 5. Run Simulation Loop ---
@@ -65,11 +66,14 @@ r.set_poses(initial_poses) # Set initial poses in Robotarium
 # 1) The get_agent_poses(), as stated previously, doesn't make sense and can be replaced with robotarium's built in functionality
 # 2) The only issue we may face is matching which agent we are getting the robotarium's info about and corresponding that to our info about each agent. This shouldn't be too crazy
 
-iterations = 500 # Example number of iterations - adjust as needed
 start_time = time.time()
+while True:
+    current_time = start_time - time.time()
 
-for k in range(iterations):
-    current_time = start_time - time.time()         #Aidan added this for future use, but not currently used
+    # need to get states and apply them
+    x = r.get_poses()
+
+    env.updatePoses(x)
 
     # a) Run Controller Step - Decentralized ACO velocity calculation
     agent_velocities_si = controller.run_step() # TODO: This is where the largest chunk of our actual algorithm functionality lies
@@ -86,12 +90,8 @@ for k in range(iterations):
     # e) Iterate Robotarium Simulation - Step the simulation forward
     r.step()
 
-
-    # --- Optional Real-time Pacing ---
-    # TODO: I think delete this
-    elapsed_time = time.time() - start_time
-    sleep_duration = max(0, TIMESTEP_SIZE - elapsed_time) # Ensure timestep is roughly real-time
-    time.sleep(sleep_duration) # Real-time pacing
+    if current_time >= MAX_TIME:
+        break
 
 
 # --- 6. Experiment End and Cleanup ---
