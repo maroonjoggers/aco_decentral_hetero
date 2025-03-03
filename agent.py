@@ -13,7 +13,7 @@ class Agent:
             traits (dict): Dictionary of heterogeneous traits (sensing_radius, etc.).
         """
         self.id = agent_id
-        self.pose = initial_pose  # [x, y, theta]
+        self.pose = initial_pose  # [x, y, theta]  #TODO: We don't need to feed it its OG position. We tell the robotarium where to start them off and their position should ALWAYS be read, not directly written
         self.state = "Foraging"  # Initial state
         self.pheromone_map = [] # List of pheromone objects perceived by this agent
         self.age = 0
@@ -38,14 +38,16 @@ class Agent:
         Args:
             environment (Environment): The environment object.
         """
-        nearby_food = environment.get_nearby_food(self.pose[:2], self.sensing_radius) # Pass only x,y
-        nearby_home = environment.is_nearby_home(self.pose[:2], self.sensing_radius) # Pass only x,y
-        nearby_obstacles = environment.get_nearby_obstacles(self.pose[:2], self.sensing_radius) # Pass only x,y
-        nearby_hazards = environment.get_nearby_hazards(self.pose[:2], self.sensing_radius) # Pass only x,y
-        nearby_pheromones = environment.get_nearby_pheromones(self.pose[:2], self.sensing_radius, self.pheromone_map) # Pass agent's map
+        nearby_food = environment.get_nearby_food(self.pose[:2], self.sensing_radius) # Returns true if we see food
+        nearby_home = environment.is_nearby_home(self.pose[:2], self.sensing_radius) # Returns true if we see the home
+        nearby_obstacles = environment.get_nearby_obstacles(self.pose[:2], self.sensing_radius) # TODO: NOT IMPLEMENTED. For now returns False
+        nearby_hazards = environment.get_nearby_hazards(self.pose[:2], self.sensing_radius) # TODO: NOT IMPLEMENTED. For now returns False
+
+        #TODO: What is the purpose of this here? It's not used and the function itself doesn't even make much sense. Probably get rid of it
+        nearby_pheromones = environment.get_nearby_pheromones(self.pose[:2], self.sensing_radius, self.pheromone_map) # TODO: CHECK THIS
 
         # --- State Update Logic based on environment checks ---
-        # Example state transitions - you'll need to define your specific logic here
+        # TODO: Right now this translates to: If we sense our goal then we immeditaly attain it. Might be okay for now but may want to reconsider
         if self.state == "Foraging":
             if nearby_food:
                 self.state = "Returning"
@@ -55,6 +57,7 @@ class Agent:
 
         # --- Handle obstacle and hazard avoidance based on nearby_obstacles and nearby_hazards ---
         # This might involve setting avoidance pheromones or directly influencing velocity
+        # TODO: This won't run right now since both will be false
         if nearby_obstacles or nearby_hazards:
             self.update_pheromone_map_own(pheromone_type="Avoidance", environment=environment) # Example: Lay avoidance pheromone
 
@@ -69,6 +72,8 @@ class Agent:
                                             Defaults to None, meaning no pheromone is laid in this call (only decay).
         """
         # --- Pheromone Laying Logic ---
+        #TODO: Should remove pheromone type check since it doesn't actually get passed in, use one or the other
+        #TODO: Make sure the correct pheromone type (opposite of state) is being laid
         if pheromone_type == "Return Home" and self.state == "Returning":
             pheromone = environment.create_pheromone(
                 agent_id=self.id,
@@ -78,6 +83,8 @@ class Agent:
                 strength=self.initial_pheromone_strength, # Trait-dependent initial strength
                 decay_rate = self.pheromone_decay_rate # Trait dependent decay rate
             )
+
+            #TODO: Should add the AGENT'S pheromone list, not the environment's
             environment.add_pheromone(pheromone) # Add to environment's pheromone list
 
         elif pheromone_type == "To Food" and self.state == "Foraging":
@@ -124,7 +131,7 @@ class Agent:
             neighbors (list): List of neighboring Agent objects within communication radius.
         """
         for neighbor in neighbors:
-            shared_pheromones = neighbor.get_perceived_pheromones(self.pose[:2], self.communication_radius) # Get pheromones perceived by neighbor
+            shared_pheromones = neighbor.get_perceived_pheromones(self.pose[:2], self.communication_radius)     #TODO: This is wrong, we want ALL of the pheromones known by the other agent to be shared. Rest here looks decent I think
             for p_shared in shared_pheromones:
                 is_new_pheromone = True
                 for p_local in self.pheromone_map:
@@ -165,17 +172,20 @@ class Agent:
         Returns:
             numpy.ndarray: Velocity inputs in Single Integrator form [vx, vy].
         """
+        #TODO: WHAT TO DO IF NO PHEROMONES --> Random Movement
+
         # --- ACO Velocity Calculation Logic ---
         # 1. Get relevant pheromones from agent's map and environment
-        relevant_pheromones = self.get_relevant_pheromones_for_state(environment)
+        relevant_pheromones = self.get_relevant_pheromones_for_state(environment)       #TODO: Needs work, check function
 
         # 2. Calculate resultant pheromone vector (sum of vector contributions of pheromones)
         resultant_vector = np.array([0.0, 0.0])
         for pheromone in relevant_pheromones:
-            pheromone_vector = self.calculate_pheromone_vector(pheromone) # Method to define pheromone vector contribution
+            pheromone_vector = self.calculate_pheromone_vector(pheromone) # Method to define pheromone vector contribution  TODO: Needs work, check function
             resultant_vector += pheromone_vector
 
         # 3. Normalize resultant vector if needed (to limit speed or direction influence)
+        # TODO: I think we should just explicitly always do this
         if np.linalg.norm(resultant_vector) > 0:
             resultant_vector = resultant_vector / np.linalg.norm(resultant_vector)
 
@@ -188,6 +198,7 @@ class Agent:
         velocity_input = resultant_vector
 
         # 5. Limit velocity magnitude based on max_speed trait
+        # TODO: This is redundant to step 3, but I think its better... maybe just remove step 3?
         speed_magnitude = np.linalg.norm(velocity_input)
         if speed_magnitude > self.max_speed:
             velocity_input = velocity_input * (self.max_speed / speed_magnitude)
@@ -206,14 +217,16 @@ class Agent:
         Returns:
             list: List of relevant Pheromone objects from the agent's pheromone map.
         """
+        #TODO: There is no check of the pheromones which are actually within the pheromone sensing radius, its literally going to look at all the pheromones lmao
+
         relevant_pheromones = []
         if self.state == "Foraging":
-            # Consider "To Food" and "Return Home" and "Avoidance" pheromones when foraging
+            # Consider "To Food" and "Avoidance" pheromones
             for p in self.pheromone_map:
-                if p.type in ["To Food", "Return Home", "Avoidance"]: # Consider Return Home to find general direction back
+                if p.type in ["To Food", "Avoidance"]: # Consider Return Home to find general direction back
                     relevant_pheromones.append(p)
         elif self.state == "Returning":
-            # Primarily follow "Return Home" pheromones, but consider "Avoidance"
+            # Consider "Return Home" and "Avoidance" pheromones
             for p in self.pheromone_map:
                 if p.type in ["Return Home", "Avoidance"]:
                     relevant_pheromones.append(p)
@@ -230,6 +243,10 @@ class Agent:
         Returns:
             numpy.ndarray: 2D vector representing pheromone influence [vx, vy].
         """
+        #TODO: This needs a complete rework. It shouldn't matter the type at all
+
+
+
         # --- Define how each pheromone type influences movement direction and strength ---
         pheromone_vector = np.array([0.0, 0.0])
         if pheromone.type == "To Food":
@@ -261,6 +278,8 @@ class Agent:
         """
         Increment the agent's age.
         """
+        #TODO: Probably want to do this on a time basis? Could updated by 0.033 seconds each robotarium iteration
+
         self.age += 1
 
 
