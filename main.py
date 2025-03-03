@@ -68,7 +68,8 @@ controller = Controller(env)
 
 start_time = time.time()
 while True:
-    current_time = start_time - time.time()
+    current_time = time.time() - start_time
+    print(current_time)
 
     # need to get states and apply them
     x = r.get_poses()
@@ -79,14 +80,12 @@ while True:
     agent_velocities_si = controller.run_step() # TODO: This is where the largest chunk of our actual algorithm functionality lies
 
     # b) Apply Barrier Certificates - Ensure safety (collision avoidance, boundary constraints)
-    safe_velocities_si = si_barrier_cert(agent_velocities_si, env.get_agent_poses()[:2,:]) # Barrier certificate application
-    # safe_velocities_si = si_barrier_cert(agent_velocities_si, r_poses[:2]) # Barrier certificate application
-
+    #safe_velocities_si = si_barrier_cert(agent_velocities_si, env.get_agent_poses()[:2,:]) # Barrier certificate application
+    safe_velocities_si = si_barrier_cert(agent_velocities_si, x[:2]) # Barrier certificate application
 
     # c) Convert SI velocities to Unicycle Velocities (Robotarium-compatible)
-    agent_velocities_uni = si_to_uni_dyn(safe_velocities_si, env.get_agent_poses()) # SI to Uni velocity transformation
-    # agent_velocities_uni = si_to_uni_dyn(safe_velocities_si, r_poses) # SI to Uni velocity transformation
-
+    #agent_velocities_uni = si_to_uni_dyn(safe_velocities_si, env.get_agent_poses()) # SI to Uni velocity transformation
+    agent_velocities_uni = si_to_uni_dyn(safe_velocities_si, x) # SI to Uni velocity transformation
 
     # d) Set Velocities in Robotarium - Command robots to move
     r.set_velocities(np.arange(NUM_AGENTS), agent_velocities_uni)
