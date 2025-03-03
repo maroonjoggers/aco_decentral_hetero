@@ -25,6 +25,7 @@ class Environment:
         self.pheromones = [] # List to store pheromone objects in the environment
         self.agents = [] # List to store Agent objects
         self.agent_traits_profiles = agent_traits_profiles # Store trait profiles
+        self.tasks_completed = 0
 
         self.initialize_agents(num_agents, agent_traits_profiles, agent_ICs)
 

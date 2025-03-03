@@ -55,6 +55,8 @@ class Agent:
         elif self.state == "Returning":
             if nearby_home:
                 self.state = "Foraging"
+                environment.tasks_completed +=1
+                print(f"Tasks completed: {environment.tasks_completed}")
 
         # --- Handle obstacle and hazard avoidance based on nearby_obstacles and nearby_hazards ---
         # This might involve setting avoidance pheromones or directly influencing velocity
