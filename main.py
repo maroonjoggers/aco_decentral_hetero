@@ -16,7 +16,6 @@ def plot_home_and_food():
     r.axes.scatter(HOME_LOCATION[0], HOME_LOCATION[1], s=100, c='g')
 
 
-
 # --- 1. Robotarium Initialization ---
 # Parameters from utils.py
 initalConditions = determineInitalConditions()
