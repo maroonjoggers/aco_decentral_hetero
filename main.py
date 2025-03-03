@@ -10,6 +10,12 @@ from utils import * # Import configuration parameters and agent trait profiles
 from environment import Environment
 from controller import Controller
 
+def plot_home_and_food():
+    
+    #Plot home location
+    r.axes.scatter(HOME_LOCATION[0], HOME_LOCATION[1], s=100, c='g')
+
+
 
 # --- 1. Robotarium Initialization ---
 # Parameters from utils.py
@@ -70,6 +76,8 @@ start_time = time.time()
 while True:
     current_time = time.time() - start_time
     print(current_time)
+
+    plot_home_and_food()
 
     # need to get states and apply them
     x = r.get_poses()
