@@ -25,9 +25,9 @@ class Agent:
         self.communication_radius = traits.get('communication_radius')
         self.pheromone_decay_rate = traits.get('pheromone_decay_rate') # New trait
 
-        self.motion_update_interval = np.random.randint(5, 20)  # Update motion every 5-20 steps
-        self.motion_update_counter = 0  # Counter to track updates
-        self.current_velocity = np.array([0.0, 0.0])  # Stores last computed velocity
+        # self.motion_update_interval = np.random.randint(5, 20)  # Update motion every 5-20 steps
+        # self.motion_update_counter = 0  # Counter to track updates
+        # self.current_velocity = np.array([0.0, 0.0])  # Stores last computed velocity
 
 
     def check_environment(self, environment):
@@ -57,67 +57,51 @@ class Agent:
 
         # --- Handle obstacle and hazard avoidance based on nearby_obstacles and nearby_hazards ---
         # This might involve setting avoidance pheromones or directly influencing velocity
-        # TODO: This won't run right now since both will be false
+        # # TODO: This won't run right now since both will be false
         if nearby_obstacles or nearby_hazards:
-            self.update_pheromone_map_own(pheromone_type="Avoidance", environment=environment) # Example: Lay avoidance pheromone
+            self.update_pheromone_map_own(environment=environment, avoidance=True) # Example: Lay avoidance pheromone
 
 
-    def update_pheromone_map_own(self, environment, pheromone_type=None):
+    def update_pheromone_map_own(self, environment, avoidance=False):
         """
         Lay down pheromones based on the agent's current state and decay existing pheromones in its map.
 
         Args:
             environment (Environment): The environment object to lay pheromones in.
-            pheromone_type (str, optional): Type of pheromone to lay (e.g., "Return Home", "To Food", "Avoidance").
-                                            Defaults to None, meaning no pheromone is laid in this call (only decay).
+            state (str): Current agent state (determines which pheromone to lay).
         """
         # --- Pheromone Laying Logic ---
-        #TODO: Should remove pheromone type check since it doesn't actually get passed in, use one or the other
-        #TODO: Make sure the correct pheromone type (opposite of state) is being laid
-        if pheromone_type == "Return Home" and self.state == "Returning":
+        pheromone_type = None
+
+        if self.state == "Foraging":
+            pheromone_type = "Return Home"
+        elif self.state == "Returning":
+            pheromone_type = "To Food"
+        elif avoidance:
+            pheromone_type = "Avoidance"
+
+        if pheromone_type:
             pheromone = environment.create_pheromone(
                 agent_id=self.id,
-                type="Return Home",
-                location=self.pose[:2].copy(), # Lay pheromone at current xy location
-                direction=self.pose[2], # Current orientation as direction - may need adjustment
-                strength=self.initial_pheromone_strength, # Trait-dependent initial strength
-                decay_rate = self.pheromone_decay_rate # Trait dependent decay rate
-            )
-
-            #TODO: Should add the AGENT'S pheromone list, not the environment's
-            environment.add_pheromone(pheromone) # Add to environment's pheromone list
-
-        elif pheromone_type == "To Food" and self.state == "Foraging":
-            pheromone = environment.create_pheromone(
-                agent_id=self.id,
-                type="To Food",
+                type=pheromone_type,
                 location=self.pose[:2].copy(),
-                direction=self.pose[2],
+                direction=self.pose[2],  
                 strength=self.initial_pheromone_strength,
-                decay_rate = self.pheromone_decay_rate
+                decay_rate=self.pheromone_decay_rate
             )
-            environment.add_pheromone(pheromone) # Add to environment's pheromone list
 
-        elif pheromone_type == "Avoidance": # Example for laying avoidance pheromones
-            pheromone = environment.create_pheromone(
-                agent_id=self.id,
-                type="Avoidance",
-                location=self.pose[:2].copy(),
-                direction=self.pose[2],
-                strength=self.initial_pheromone_strength,
-                decay_rate = self.pheromone_decay_rate
-            )
-            environment.add_pheromone(pheromone) # Add to environment's pheromone list
-        
-        if pheromone_type is not None:
-            print(f"Agent {self.id} laying {pheromone_type} pheromone at {self.pose[:2]}")
+            # Add pheromone to agent's local pheromone map
+            self.pheromone_map.append(pheromone)  
+            print(f"Agent {self.id} added {pheromone_type} pheromone to local map at {self.pose[:2]}")
 
+            # Optionally, still add to the environment
+            environment.add_pheromone(pheromone)  
 
-        # --- Pheromone Decay for pheromones in agent's map ---
+        # --- Pheromone Decay for the agent's local pheromone map ---
         updated_pheromone_map = []
         for p in self.pheromone_map:
-            p.decay() # Decay pheromone strength
-            if p.strength > 0: # Keep pheromones with positive strength
+            p.decay()  
+            if p.strength > 0:
                 updated_pheromone_map.append(p)
         self.pheromone_map = updated_pheromone_map
 
@@ -131,7 +115,7 @@ class Agent:
             neighbors (list): List of neighboring Agent objects within communication radius.
         """
         for neighbor in neighbors:
-            shared_pheromones = neighbor.get_perceived_pheromones(self.pose[:2], self.communication_radius)     #TODO: This is wrong, we want ALL of the pheromones known by the other agent to be shared. Rest here looks decent I think
+            shared_pheromones = neighbor.pheromone_map     #TODO: This is wrong, we want ALL of the pheromones known by the other agent to be shared. Rest here looks decent I think
             for p_shared in shared_pheromones:
                 is_new_pheromone = True
                 for p_local in self.pheromone_map:
@@ -174,6 +158,9 @@ class Agent:
         """
         #TODO: WHAT TO DO IF NO PHEROMONES --> Random Movement
 
+        scaling = 0.75
+        heading_std = np.pi/8
+
         # --- ACO Velocity Calculation Logic ---
         # 1. Get relevant pheromones from agent's map and environment
         relevant_pheromones = self.get_relevant_pheromones_for_state(environment)       #TODO: Needs work, check function
@@ -188,12 +175,20 @@ class Agent:
         # TODO: I think we should just explicitly always do this
         if np.linalg.norm(resultant_vector) > 0:
             resultant_vector = resultant_vector / np.linalg.norm(resultant_vector)
+            movement_direction = np.arctan2(resultant_vector[1], resultant_vector[0])
+            speed = np.linalg.norm(resultant_vector)
+        else:
+            movement_direction = self.pose[2]
+            speed = self.max_speed * scaling
 
         # 4. Add probabilistic element for exploration (e.g., random deviation) - IMPLEMENTATION NEEDED
-        if np.linalg.norm(resultant_vector) < 1e-3:
-            random_angle = np.random.uniform(0, 2 * np.pi)  # Pick a random direction
-            resultant_vector = np.array([np.cos(random_angle), np.sin(random_angle)]) *2  # Small step
-            print(f"Agent {self.id} using random movement: {resultant_vector}")
+        # if np.linalg.norm(resultant_vector) < 1e-3:
+        #     random_angle = np.random.uniform(0, 2 * np.pi)  # Pick a random direction
+        #     resultant_vector = np.array([np.cos(random_angle), np.sin(random_angle)]) *2  # Small step
+        #     print(f"Agent {self.id} using random movement: {resultant_vector}")
+        
+        gauss_noise = np.random.normal(loc=movement_direction, scale=heading_std )
+        resultant_vector = np.array([np.cos(gauss_noise), np.sin(gauss_noise)]) * speed
 
         velocity_input = resultant_vector
 

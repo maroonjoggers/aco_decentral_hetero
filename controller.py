@@ -55,6 +55,7 @@ class Controller:
             agent_velocities_si[:, i] = velocity_input_si # Store SI velocity for agent in the returned variable    TODO: CHECK THIS IS IN THE CORRECT FORM
 
 
+
         # 5. Age Update - Increment agent age at each step
         for agent in self.environment.agents:
             agent.update_age()                  #TODO: Check function
