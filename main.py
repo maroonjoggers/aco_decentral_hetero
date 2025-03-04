@@ -31,7 +31,7 @@ def plot_radii(environment, circles):
         center = agent.pose[:2]
         radius = agent.communication_radius
 
-        theta = np.linspace(0, 2*np.pi, 100)
+        theta = np.linspace(0, 2*np.pi, 50)
 
         x = center[0] + radius * np.cos(theta)
         y = center[1] + radius * np.sin(theta)

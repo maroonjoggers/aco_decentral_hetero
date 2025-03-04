@@ -3,6 +3,8 @@ import numpy as np
 import environment
 # from environment import Environment
 import copy
+from utils import *
+import random
 
 class Agent:
     def __init__(self, agent_id, initial_pose, traits):
@@ -26,6 +28,7 @@ class Agent:
         self.initial_pheromone_strength = traits.get('initial_pheromone_strength')
         self.communication_radius = traits.get('communication_radius')
         self.pheromone_lifetime = traits.get('pheromone_lifetime') # New trait
+        self.random_direction_change_timer = 0
 
         # self.motion_update_interval = np.random.randint(5, 20)  # Update motion every 5-20 steps
         # self.motion_update_counter = 0  # Counter to track updates
@@ -91,7 +94,7 @@ class Agent:
                 agent_id=self.id,
                 type=pheromone_type,
                 location=self.pose[:2].copy(),
-                direction=np.arctan2(np.sin(np.pi+self.pose[2]), np.cos(np.pi+self.pose[2])),        #Reverse the direction  
+                direction=angle_wrapping(np.pi+self.pose[2]),        #Reverse the direction  
                 strength=self.initial_pheromone_strength,
                 lifeTime=self.pheromone_lifetime
             )
@@ -159,7 +162,7 @@ class Agent:
         return perceived_pheromones
 
 
-    def determine_velocity_inputs_aco(self, environment):
+    def determine_velocity_inputs_aco(self, environment, current_time):
         """
         Determine velocity inputs (Single Integrator form) based on ACO logic and pheromone map.
 
@@ -172,7 +175,6 @@ class Agent:
         #TODO: WHAT TO DO IF NO PHEROMONES --> Random Movement
 
         scaling = 0.75
-        heading_std = np.pi/8
 
         # --- ACO Velocity Calculation Logic ---
         # 1. Get relevant pheromones from agent's map and environment
@@ -199,8 +201,12 @@ class Agent:
         #     random_angle = np.random.uniform(0, 2 * np.pi)  # Pick a random direction
         #     resultant_vector = np.array([np.cos(random_angle), np.sin(random_angle)]) *2  # Small step
         #     print(f"Agent {self.id} using random movement: {resultant_vector}")
+        if current_time - self.random_direction_change_timer >= RANDOM_REDIRECTION_RATE:
+            movement_direction += random.uniform(*RANDOM_REDIRECTION_LIMITS)
+            movement_direction = angle_wrapping(movement_direction)
+            self.random_direction_change_timer = current_time
         
-        gauss_noise = np.random.normal(loc=movement_direction, scale=heading_std )
+        gauss_noise = np.random.normal(loc=movement_direction, scale=HEADING_STD )
         resultant_vector = np.array([np.cos(gauss_noise), np.sin(gauss_noise)]) * speed
 
         velocity_input = resultant_vector

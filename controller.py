@@ -72,7 +72,7 @@ class Controller:
         # 4. Determine Velocity Inputs (ACO-based decentralized control) - AFTER pheromone maps are updated
         for i in range(len(self.environment.agents)):
             agent = self.environment.agents[i]
-            velocity_input_si = agent.determine_velocity_inputs_aco(self.environment) # ACO velocity calculation    TODO See function
+            velocity_input_si = agent.determine_velocity_inputs_aco(self.environment, current_time) # ACO velocity calculation    TODO See function
             agent_velocities_si[:, i] = velocity_input_si # Store SI velocity for agent in the returned variable    TODO: CHECK THIS IS IN THE CORRECT FORM
 
 
