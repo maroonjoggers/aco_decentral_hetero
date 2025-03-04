@@ -12,9 +12,11 @@ class Controller:
             environment (Environment): The environment object.
         """
         self.environment = environment
+        self.previous_time = 0.0
+        self.ph_plot = None
 
 
-    def run_step(self):
+    def run_step(self, current_time):
         """
         Execute one control step for all agents in the environment.
         This includes:
@@ -36,9 +38,22 @@ class Controller:
             #TODO: Check logic but might be okay
             agent.check_environment(self.environment)           #State change if we found food/goal, as well as handles obstacles (or at least it will)
 
+        if current_time - self.previous_time >= PH_LAYING_RATE:
+            for i in range(len(self.environment.agents)):
             # 2. Pheromone Update (Laying own pheromones and decay)
-            #TODO: Logic changes as seen in function definition comments
-            agent.update_pheromone_map_own(self.environment)    # Lay pheromones based on agent's state and decay existing
+                agent = self.environment.agents[i]
+                agent.update_pheromone_map_own(self.environment)    # Lay pheromones based on agent's state and decay existing
+                self.previous_time = current_time
+            
+            # Plot all pheromones
+            if self.ph_plot:
+                self.ph_plot.remove()
+
+            xVals = [ph.location[0] for ph in self.environment.pheromones]
+            yVals = [ph.location[1] for ph in self.environment.pheromones]
+
+            self.ph_plot = self.environment.robotarium.axes.scatter(xVals, yVals, s=15, c='r')
+
 
 
         # 3. Pheromone Map Sharing (Decentralized Communication) - AFTER all agents have sensed and potentially laid pheromones in this timestep

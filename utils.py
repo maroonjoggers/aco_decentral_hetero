@@ -20,25 +20,29 @@ MAX_TIME = 400
 # INITAL CONDITIONS
 INTER_AGENT_DIST = 0.30
 
+PH_LAYING_RATE = 0.5
+
+PH_PLOTTING_RATE = 0.5
+
 
 # --- Heterogeneous Agent Trait Profiles ---
 # Define different trait profiles for agents - easily extendable and modifiable
 AGENT_TRAIT_PROFILES = {
     "Profile_Type_A": { # Example profile 1
-        "num_agents": 5, # Number of agents with this profile - can be overridden in main script
+        "num_agents": 2, # Number of agents with this profile - can be overridden in main script
         "sensing_radius": 0.3, # meters - Example values - ADJUST AS NEEDED
         "max_speed": 0.1, # m/s
         "initial_pheromone_strength": 1.0, # Initial pheromone strength for agents of this type
         "communication_radius": 0.5, # meters
-        "pheromone_decay_rate": 0.01, # Decay rate per timestep
+        "pheromone_lifetime": 10.0, # Decay rate per timestep
     },
     "Profile_Type_B": { # Example profile 2
-        "num_agents": 5, # Number of agents with this profile - can be overridden
+        "num_agents": 3, # Number of agents with this profile - can be overridden
         "sensing_radius": 0.4,
         "max_speed": 0.12,
         "initial_pheromone_strength": 1.2,
         "communication_radius": 0.6,
-        "pheromone_decay_rate": 0.008,
+        "pheromone_lifetime": 10.0,
     },
     # Add more profiles as needed - easily extendable
 }

@@ -24,7 +24,7 @@ class Agent:
         self.max_speed = traits.get('max_speed')
         self.initial_pheromone_strength = traits.get('initial_pheromone_strength')
         self.communication_radius = traits.get('communication_radius')
-        self.pheromone_decay_rate = traits.get('pheromone_decay_rate') # New trait
+        self.pheromone_lifetime = traits.get('pheromone_lifetime') # New trait
 
         # self.motion_update_interval = np.random.randint(5, 20)  # Update motion every 5-20 steps
         # self.motion_update_counter = 0  # Counter to track updates
@@ -77,7 +77,6 @@ class Agent:
         pheromone_type = None
 
 
-
         if self.state == "Foraging":
             pheromone_type = "Return Home"
         elif self.state == "Returning":
@@ -93,7 +92,7 @@ class Agent:
                 location=self.pose[:2].copy(),
                 direction=np.arctan2(np.sin(np.pi+self.pose[2]), np.cos(np.pi+self.pose[2])),        #Reverse the direction  
                 strength=self.initial_pheromone_strength,
-                decay_rate=self.pheromone_decay_rate
+                lifeTime=self.pheromone_lifetime
             )
 
             # Add pheromone to agent's local pheromone map
@@ -110,6 +109,7 @@ class Agent:
             if p.strength > 0:
                 updated_pheromone_map.append(p)
         self.pheromone_map = updated_pheromone_map
+
 
 
     def update_pheromone_map_shared(self, environment, neighbors):

@@ -84,14 +84,13 @@ while True:
     current_time = time.time() - start_time
     print(current_time)
 
-
     # need to get states and apply them
     x = r.get_poses()
 
     env.updatePoses(x)
 
     # a) Run Controller Step - Decentralized ACO velocity calculation
-    agent_velocities_si = controller.run_step() # TODO: This is where the largest chunk of our actual algorithm functionality lies
+    agent_velocities_si = controller.run_step(current_time) # TODO: This is where the largest chunk of our actual algorithm functionality lies
 
     # b) Apply Barrier Certificates - Ensure safety (collision avoidance, boundary constraints)
     #safe_velocities_si = si_barrier_cert(agent_velocities_si, env.get_agent_poses()[:2,:]) # Barrier certificate application

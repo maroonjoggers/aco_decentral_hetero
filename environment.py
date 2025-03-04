@@ -2,6 +2,7 @@
 import numpy as np
 from agent import Agent
 import uuid # For generating unique IDs for pheromones
+from utils import *
 
 class Environment:
     def __init__(self, boundary_points, home_location, food_locations, obstacle_locations, hazard_locations, num_agents, agent_traits_profiles, agent_ICs, robotarium):
@@ -88,7 +89,7 @@ class Environment:
         return np.array([x, y, theta])
 
 
-    def create_pheromone(self, agent_id, type, location, direction, strength, decay_rate):
+    def create_pheromone(self, agent_id, type, location, direction, strength, lifeTime):
         """
         Create a new pheromone object.
 
@@ -104,7 +105,7 @@ class Environment:
             Pheromone: A new Pheromone object.
         """
         pheromone_id = uuid.uuid4() # Generate unique ID
-        return Pheromone(pheromone_id, agent_id, type, location, direction, strength, decay_rate)
+        return Pheromone(pheromone_id, agent_id, type, location, direction, strength, lifeTime)
 
 
     def add_pheromone(self, pheromone):
@@ -313,7 +314,7 @@ class Environment:
 
 # --- Pheromone Class (Inner class within Environment or separate file pheromone.py - CHOOSE ONE) ---
 class Pheromone:
-    def __init__(self, pheromone_id, agent_id, type, location, direction, strength, decay_rate):
+    def __init__(self, pheromone_id, agent_id, type, location, direction, strength, lifeTime):
         """
         Initialize a Pheromone object.
 
@@ -332,12 +333,11 @@ class Pheromone:
         self.location = np.array(location) # [x, y]
         self.direction = direction # (global) Theta relative to the positive x-axis
         self.strength = strength # Initial and current strength
-        self.decay_rate = decay_rate # Decay rate per timestep
-
+        self.decay_rate = strength/lifeTime # Decay rate per timestep
 
     def decay(self):
         """
         Decrease the pheromone strength based on its decay rate.
         """
-        self.strength -= self.decay_rate # Linear decay - change decay function if needed
+        self.strength -= self.decay_rate * PH_LAYING_RATE # Linear decay - change decay function if needed
         self.strength = max(0, self.strength) # Ensure strength doesn't go below zero
