@@ -48,12 +48,17 @@ class Controller:
             # Plot all pheromones
             if self.ph_plot:
                 self.ph_plot.remove()
-
+            
+            pheromone_colors = {
+                "Return Home": "r",
+                "To Food": "k",
+                "Avoidance": "o" 
+            }
+    
             xVals = [ph.location[0] for ph in self.environment.pheromones]
             yVals = [ph.location[1] for ph in self.environment.pheromones]
-
-            self.ph_plot = self.environment.robotarium.axes.scatter(xVals, yVals, s=15, c='r')
-
+            colors = [pheromone_colors[ph.type] for ph in self.environment.pheromones]  
+            self.ph_plot = self.environment.robotarium.axes.scatter(xVals, yVals, s=15, c=colors)
 
 
         # 3. Pheromone Map Sharing (Decentralized Communication) - AFTER all agents have sensed and potentially laid pheromones in this timestep
