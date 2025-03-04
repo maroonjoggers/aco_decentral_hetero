@@ -2,6 +2,7 @@
 import numpy as np
 import environment
 # from environment import Environment
+import copy
 
 class Agent:
     def __init__(self, agent_id, initial_pose, traits):
@@ -108,6 +109,11 @@ class Agent:
             p.decay()  
             if p.strength > 0:
                 updated_pheromone_map.append(p)
+            else:                                           #If the pheromone died, remove it from the global list
+                for ph in environment.pheromones:
+                    if ph.id == p.id:
+                        environment.pheromones.remove(ph)
+
         self.pheromone_map = updated_pheromone_map
 
 
@@ -129,7 +135,9 @@ class Agent:
                         is_new_pheromone = False
                         break
                 if is_new_pheromone:
-                    self.pheromone_map.append(p_shared) # Add new pheromone to local map
+                    self.pheromone_map.append(copy.copy(p_shared)) # Add new pheromone to local map
+
+        print("PH MAP AGENT " + str(self.id) + " " + str(self.pheromone_map))
 
 
     def get_perceived_pheromones(self, center_location, radius):
