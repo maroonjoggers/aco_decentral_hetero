@@ -26,6 +26,8 @@ RANDOM_REDIRECTION_RATE = 15.0
 RANDOM_REDIRECTION_LIMITS = [-np.pi/2, np.pi/2]
 HEADING_STD = np.pi/6
 
+PLOTTING = True
+
 # --- Heterogeneous Agent Trait Profiles ---
 # Define different trait profiles for agents - easily extendable and modifiable
 AGENT_TRAIT_PROFILES = {

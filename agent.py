@@ -30,6 +30,8 @@ class Agent:
         self.pheromone_lifetime = traits.get('pheromone_lifetime') # New trait
         self.random_direction_change_timer = 0
 
+        self.velocity_vector = [0, 0]
+
         # self.motion_update_interval = np.random.randint(5, 20)  # Update motion every 5-20 steps
         # self.motion_update_counter = 0  # Counter to track updates
         # self.current_velocity = np.array([0.0, 0.0])  # Stores last computed velocity

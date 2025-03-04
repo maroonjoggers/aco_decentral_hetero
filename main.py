@@ -66,6 +66,27 @@ def plot_edges(environment, edges, num_points=20):
 
     return edges
 
+def plot_arrow(environment, arrow, num_points=10):      #FIXME
+    if arrow:
+        for v in arrow:
+            v.remove()
+
+    arrow = []
+
+    for agent in environment.agents:
+        agent_pos = np.array(agent.pose[:2])
+        velocity_vector = np.array(agent.velocity_vector) / (4*np.linalg.norm(agent.velocity_vector))
+
+        x = np.linspace(agent_pos[0], velocity_vector[0], num_points)
+        y = np.linspace(agent_pos[1], velocity_vector[1], num_points)
+        
+        # Draw a line between the agent and its neighbor
+        arrow_new = r.axes.scatter(x, y, s=2, c='m') 
+        
+        arrow.append(arrow_new)
+
+    return arrow
+
 
 
 # --- 1. Robotarium Initialization ---
@@ -128,14 +149,17 @@ plot_home_and_food()
 
 circles = None
 edges = None
+arrow = None
 
 start_time = time.time()
 while True:
     current_time = time.time() - start_time
     print(current_time)
 
-    circles = plot_radii(env, circles)
-    edges = plot_edges(env, edges)
+    if PLOTTING:
+        circles = plot_radii(env, circles)
+        edges = plot_edges(env, edges)
+        # arrow = plot_arrow(env, arrow)      #FIXME
 
     # need to get states and apply them
     x = r.get_poses()
