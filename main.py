@@ -20,6 +20,22 @@ def plot_home_and_food():
     yVals = [location[1] for location in FOOD_LOCATIONS]
     r.axes.scatter(xVals, yVals, s=100, c='g')
 
+def plot_radii(environment):
+    if g:
+        g.remove()
+
+    for agent in environment.agents:
+        center = agent.pose[:2]
+        radius = agent.communication_radius
+
+        theta = np.linspace(0, 2*np.pi, 100)
+
+        x = center[0] + radius * np.cos(theta)
+        y = center[1] + radius * np.sin(theta)
+
+        g = r.axes.scatter(x, y, s=2, c='y')
+
+
 
 # --- 1. Robotarium Initialization ---
 # Parameters from utils.py
@@ -79,10 +95,14 @@ controller = Controller(env)
 
 plot_home_and_food()
 
+g = None
+
 start_time = time.time()
 while True:
     current_time = time.time() - start_time
     print(current_time)
+
+    #plot_radii(env)
 
     # need to get states and apply them
     x = r.get_poses()
