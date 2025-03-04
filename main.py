@@ -20,7 +20,7 @@ def plot_home_and_food():
     yVals = [location[1] for location in FOOD_LOCATIONS]
     r.axes.scatter(xVals, yVals, s=100, c='g')
 
-def plot_radii(environment, circles):
+def plot_radii(environment, circles, num_points=50):
     if circles:
         for graph in circles:
             graph.remove()
@@ -31,7 +31,7 @@ def plot_radii(environment, circles):
         center = agent.pose[:2]
         radius = agent.communication_radius
 
-        theta = np.linspace(0, 2*np.pi, 50)
+        theta = np.linspace(0, 2*np.pi, num_points)
 
         x = center[0] + radius * np.cos(theta)
         y = center[1] + radius * np.sin(theta)
@@ -40,6 +40,31 @@ def plot_radii(environment, circles):
         circles.append(circles_new)
 
     return circles
+
+def plot_edges(environment, edges, num_points=20):
+    # Remove existing edges
+    if edges:
+        for line in edges:
+            line.remove()
+
+    edges = []
+
+    for agent in environment.agents:
+        agent_pos = np.array(agent.pose[:2] )
+        
+        # Loop through neighbors within the communication radius
+        for neighbor in environment.get_agents_within_communication_radius(agent, agent.communication_radius):
+            neighbor_pos = np.array(neighbor.pose[:2] )
+
+            x = np.linspace(agent_pos[0], neighbor_pos[0], num_points)
+            y = np.linspace(agent_pos[1], neighbor_pos[1], num_points)
+            
+            # Draw a line between the agent and its neighbor
+            edge_new = r.axes.scatter(x, y, s=2, c='c') 
+            
+            edges.append(edge_new)
+
+    return edges
 
 
 
@@ -102,6 +127,7 @@ controller = Controller(env)
 plot_home_and_food()
 
 circles = None
+edges = None
 
 start_time = time.time()
 while True:
@@ -109,6 +135,7 @@ while True:
     print(current_time)
 
     circles = plot_radii(env, circles)
+    edges = plot_edges(env, edges)
 
     # need to get states and apply them
     x = r.get_poses()
