@@ -76,11 +76,14 @@ class Agent:
         # --- Pheromone Laying Logic ---
         pheromone_type = None
 
+
+
         if self.state == "Foraging":
             pheromone_type = "Return Home"
         elif self.state == "Returning":
             pheromone_type = "To Food"
-        elif avoidance:
+        
+        if avoidance:
             pheromone_type = "Avoidance"
 
         if pheromone_type:
@@ -88,7 +91,7 @@ class Agent:
                 agent_id=self.id,
                 type=pheromone_type,
                 location=self.pose[:2].copy(),
-                direction=self.pose[2],  
+                direction=np.arctan2(np.sin(np.pi+self.pose[2]), np.cos(np.pi+self.pose[2])),        #Reverse the direction  
                 strength=self.initial_pheromone_strength,
                 decay_rate=self.pheromone_decay_rate
             )
@@ -244,10 +247,15 @@ class Agent:
         Returns:
             numpy.ndarray: 2D vector representing pheromone influence [vx, vy].
         """
-        #TODO: This needs a complete rework. It shouldn't matter the type at all
 
+        #Vectorized form of the pheromone
+        pheromone_vector = pheromone.strength * np.array([np.cos(pheromone.direction), np.sin(pheromone.direction)])
 
+        #TODO FIXME
+        #vectorFromAgentToPh = pheromone.location - self.pose[:2]
+        #vectorFromAgentToPh /= np.linalg.norm(vectorFromAgentToPh) 
 
+        '''
         # --- Define how each pheromone type influences movement direction and strength ---
         pheromone_vector = np.array([0.0, 0.0])
         if pheromone.type == "To Food":
@@ -270,6 +278,7 @@ class Agent:
             magnitude = pheromone.strength
             if np.linalg.norm(direction_vector) > 0:
                 pheromone_vector = magnitude * (direction_vector / np.linalg.norm(direction_vector))
+        '''
 
 
         return pheromone_vector
