@@ -20,26 +20,72 @@ def plot_home_and_food():
     yVals = [location[1] for location in FOOD_LOCATIONS]
     r.axes.scatter(xVals, yVals, s=100, c='g')
 
-def plot_radii(environment, g):
-    if g:
-        for graph in g:
+def plot_radii(environment, circles, num_points=50):
+    if circles:
+        for graph in circles:
             graph.remove()
 
-    g = []
+    circles = []
 
     for agent in environment.agents:
         center = agent.pose[:2]
-        radius = agent.communication_radius
+        radius = agent.sensing_radius
 
-        theta = np.linspace(0, 2*np.pi, 100)
+        theta = np.linspace(0, 2*np.pi, num_points)
 
         x = center[0] + radius * np.cos(theta)
         y = center[1] + radius * np.sin(theta)
 
-        g_new = r.axes.scatter(x, y, s=2, c='y')
-        g.append(g_new)
+        circles_new = r.axes.scatter(x, y, s=2, c='y')
+        circles.append(circles_new)
 
-    return g
+    return circles
+
+def plot_edges(environment, edges, num_points=20):
+    # Remove existing edges
+    if edges:
+        for line in edges:
+            line.remove()
+
+    edges = []
+
+    for agent in environment.agents:
+        agent_pos = np.array(agent.pose[:2] )
+        
+        # Loop through neighbors within the communication radius
+        for neighbor in environment.get_agents_within_communication_radius(agent, agent.communication_radius):
+            neighbor_pos = np.array(neighbor.pose[:2] )
+
+            x = np.linspace(agent_pos[0], neighbor_pos[0], num_points)
+            y = np.linspace(agent_pos[1], neighbor_pos[1], num_points)
+            
+            # Draw a line between the agent and its neighbor
+            edge_new = r.axes.scatter(x, y, s=2, c='c') 
+            
+            edges.append(edge_new)
+
+    return edges
+
+def plot_arrow(environment, arrow, num_points=10):      #FIXME
+    if arrow:
+        for v in arrow:
+            v.remove()
+
+    arrow = []
+
+    for agent in environment.agents:
+        agent_pos = np.array(agent.pose[:2])
+        velocity_vector = np.array(agent.velocity_vector) / (4*np.linalg.norm(agent.velocity_vector))
+
+        x = np.linspace(agent_pos[0], velocity_vector[0], num_points)
+        y = np.linspace(agent_pos[1], velocity_vector[1], num_points)
+        
+        # Draw a line between the agent and its neighbor
+        arrow_new = r.axes.scatter(x, y, s=2, c='m') 
+        
+        arrow.append(arrow_new)
+
+    return arrow
 
 
 
@@ -101,14 +147,19 @@ controller = Controller(env)
 
 plot_home_and_food()
 
-g = None
+circles = None
+edges = None
+arrow = None
 
 start_time = time.time()
 while True:
     current_time = time.time() - start_time
-    print(current_time)
+    # print(current_time)
 
-    g = plot_radii(env, g)
+    if PLOTTING:
+        circles = plot_radii(env, circles)
+        #edges = plot_edges(env, edges)
+        # arrow = plot_arrow(env, arrow)      #FIXME
 
     # need to get states and apply them
     x = r.get_poses()

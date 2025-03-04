@@ -3,6 +3,8 @@ import numpy as np
 import environment
 # from environment import Environment
 import copy
+from utils import *
+import random
 
 class Agent:
     def __init__(self, agent_id, initial_pose, traits):
@@ -26,6 +28,9 @@ class Agent:
         self.initial_pheromone_strength = traits.get('initial_pheromone_strength')
         self.communication_radius = traits.get('communication_radius')
         self.pheromone_lifetime = traits.get('pheromone_lifetime') # New trait
+        self.random_direction_change_timer = 0
+
+        self.velocity_vector = [0, 0]
 
         # self.motion_update_interval = np.random.randint(5, 20)  # Update motion every 5-20 steps
         # self.motion_update_counter = 0  # Counter to track updates
@@ -91,7 +96,7 @@ class Agent:
                 agent_id=self.id,
                 type=pheromone_type,
                 location=self.pose[:2].copy(),
-                direction=np.arctan2(np.sin(np.pi+self.pose[2]), np.cos(np.pi+self.pose[2])),        #Reverse the direction  
+                direction=angle_wrapping(np.pi+self.pose[2]),        #Reverse the direction  
                 strength=self.initial_pheromone_strength,
                 lifeTime=self.pheromone_lifetime
             )
@@ -127,7 +132,7 @@ class Agent:
             neighbors (list): List of neighboring Agent objects within communication radius.
         """
         for neighbor in neighbors:
-            shared_pheromones = neighbor.pheromone_map     #TODO: This is wrong, we want ALL of the pheromones known by the other agent to be shared. Rest here looks decent I think
+            shared_pheromones = neighbor.pheromone_map     
             for p_shared in shared_pheromones:
                 is_new_pheromone = True
                 for p_local in self.pheromone_map:
@@ -138,7 +143,8 @@ class Agent:
                     self.pheromone_map.append(copy.copy(p_shared)) # Add new pheromone to local map
 
 
-    def get_perceived_pheromones(self, center_location, radius):
+
+    def get_perceived_pheromones(self, center_location, radius):  #NOTE: Unused?
         """
         Returns a list of pheromone objects from the agent's map that are within a given radius of a location.
         Used for sharing pheromone information with neighbors.
@@ -158,7 +164,7 @@ class Agent:
         return perceived_pheromones
 
 
-    def determine_velocity_inputs_aco(self, environment):
+    def determine_velocity_inputs_aco(self, environment, current_time):
         """
         Determine velocity inputs (Single Integrator form) based on ACO logic and pheromone map.
 
@@ -171,7 +177,6 @@ class Agent:
         #TODO: WHAT TO DO IF NO PHEROMONES --> Random Movement
 
         scaling = 0.75
-        heading_std = np.pi/8
 
         # --- ACO Velocity Calculation Logic ---
         # 1. Get relevant pheromones from agent's map and environment
@@ -198,14 +203,18 @@ class Agent:
         #     random_angle = np.random.uniform(0, 2 * np.pi)  # Pick a random direction
         #     resultant_vector = np.array([np.cos(random_angle), np.sin(random_angle)]) *2  # Small step
         #     print(f"Agent {self.id} using random movement: {resultant_vector}")
-        
-        gauss_noise = np.random.normal(loc=movement_direction, scale=heading_std )
-        resultant_vector = np.array([np.cos(gauss_noise), np.sin(gauss_noise)]) * speed
+            if current_time - self.random_direction_change_timer >= RANDOM_REDIRECTION_RATE:
+                movement_direction += random.uniform(*RANDOM_REDIRECTION_LIMITS)
+                movement_direction = angle_wrapping(movement_direction)
+                self.random_direction_change_timer = current_time
+            
+            gauss_noise = np.random.normal(loc=movement_direction, scale=HEADING_STD )
+            resultant_vector = np.array([np.cos(gauss_noise), np.sin(gauss_noise)]) * speed
 
         velocity_input = resultant_vector
         # 4. Add probabilistic element for exploration (e.g., random deviation)
         # TODO: IMPLEMENTATION NEEDED
-        velocity_input = resultant_vector # Placeholder - replace with probabilistic ACO velocity
+        # velocity_input = resultant_vector # Placeholder - replace with probabilistic ACO velocity
 
         # 5. Limit velocity magnitude based on max_speed trait
         # TODO: This is redundant to step 3, but I think its better... maybe just remove step 3?
@@ -243,7 +252,7 @@ class Agent:
         return relevant_pheromones
 
 
-    def calculate_pheromone_vector(self, pheromone):
+    def calculate_pheromone_vector(self, pheromone):                    ######### VECTOR MAGNITUDES ISSUE ? FIXME
         """
         Calculate the vector contribution of a single pheromone to the agent's movement.
 
@@ -256,10 +265,13 @@ class Agent:
 
         #Vectorized form of the pheromone
         pheromone_vector = pheromone.strength * np.array([np.cos(pheromone.direction), np.sin(pheromone.direction)])
+        pheromone_vector /= np.linalg.norm(pheromone_vector)
 
         #TODO FIXME
-        #vectorFromAgentToPh = pheromone.location - self.pose[:2]
-        #vectorFromAgentToPh /= np.linalg.norm(vectorFromAgentToPh) 
+        vectorFromAgentToPh = pheromone.location - self.pose[:2]
+        vectorFromAgentToPh /= np.linalg.norm(vectorFromAgentToPh) 
+
+        pheromone_vector += vectorFromAgentToPh
 
         '''
         # --- Define how each pheromone type influences movement direction and strength ---

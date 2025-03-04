@@ -22,23 +22,28 @@ INTER_AGENT_DIST = 0.30
 
 PH_LAYING_RATE = 1.0
 
+RANDOM_REDIRECTION_RATE = 5.0
+RANDOM_REDIRECTION_LIMITS = [-np.pi/2, np.pi/2]
+HEADING_STD = np.pi/6
+
+PLOTTING = True
 
 # --- Heterogeneous Agent Trait Profiles ---
 # Define different trait profiles for agents - easily extendable and modifiable
 AGENT_TRAIT_PROFILES = {
     "Profile_Type_A": { # Example profile 1
-        "num_agents": 5, # Number of agents with this profile - can be overridden in main script
-        "sensing_radius": 0.25, # meters - Example values - ADJUST AS NEEDED
+        "num_agents": 6, # Number of agents with this profile - can be overridden in main script
+        "sensing_radius": 0.22, # meters - Example values - ADJUST AS NEEDED
         "max_speed": 0.12, # m/s
         "initial_pheromone_strength": 1.0, # Initial pheromone strength for agents of this type
-        "communication_radius": 0.5, # meters
-        "pheromone_lifetime": 20.0, # Decay rate per timestep
+        "communication_radius": 0.52, # meters
+        "pheromone_lifetime": 100.0, # Decay rate per timestep
     },
     "Profile_Type_B": { # Example profile 2
         "num_agents": 0, # Number of agents with this profile - can be overridden
         "sensing_radius": 0.25,
         "max_speed": 0.12,
-        "initial_pheromone_strength": 1.2,
+        "initial_pheromone_strength": 0.85,
         "communication_radius": 0.5,
         "pheromone_lifetime": 20.0,
     },
@@ -104,6 +109,11 @@ def determineInitalConditions():
     # Stack positions and orientations
     return np.vstack((positions, orientations))  # Shape (3, N)
     
+def angle_wrapping(angle):
+    """
+        Ensures angle is between -pi and pi.
+    """
+    return np.arctan2(np.sin(angle), np.cos(angle))
 
 
 # --- Functions to Generate Graph Laplacians (if needed for communication or control) ---
