@@ -29,7 +29,7 @@ def plot_radii(environment, circles, num_points=50):
 
     for agent in environment.agents:
         center = agent.pose[:2]
-        radius = agent.communication_radius
+        radius = agent.sensing_radius
 
         theta = np.linspace(0, 2*np.pi, num_points)
 

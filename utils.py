@@ -22,7 +22,7 @@ INTER_AGENT_DIST = 0.30
 
 PH_LAYING_RATE = 1.0
 
-RANDOM_REDIRECTION_RATE = 5.0
+RANDOM_REDIRECTION_RATE = 15.0
 RANDOM_REDIRECTION_LIMITS = [-np.pi/2, np.pi/2]
 HEADING_STD = np.pi/6
 
@@ -31,11 +31,11 @@ HEADING_STD = np.pi/6
 AGENT_TRAIT_PROFILES = {
     "Profile_Type_A": { # Example profile 1
         "num_agents": 6, # Number of agents with this profile - can be overridden in main script
-        "sensing_radius": 0.25, # meters - Example values - ADJUST AS NEEDED
+        "sensing_radius": 0.22, # meters - Example values - ADJUST AS NEEDED
         "max_speed": 0.12, # m/s
         "initial_pheromone_strength": 1.0, # Initial pheromone strength for agents of this type
-        "communication_radius": 0.5, # meters
-        "pheromone_lifetime": 20.0, # Decay rate per timestep
+        "communication_radius": 0.52, # meters
+        "pheromone_lifetime": 50.0, # Decay rate per timestep
     },
     "Profile_Type_B": { # Example profile 2
         "num_agents": 0, # Number of agents with this profile - can be overridden

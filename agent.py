@@ -130,7 +130,7 @@ class Agent:
             neighbors (list): List of neighboring Agent objects within communication radius.
         """
         for neighbor in neighbors:
-            shared_pheromones = neighbor.pheromone_map     #TODO: This is wrong, we want ALL of the pheromones known by the other agent to be shared. Rest here looks decent I think
+            shared_pheromones = neighbor.pheromone_map     
             for p_shared in shared_pheromones:
                 is_new_pheromone = True
                 for p_local in self.pheromone_map:
@@ -142,7 +142,7 @@ class Agent:
 
 
 
-    def get_perceived_pheromones(self, center_location, radius):
+    def get_perceived_pheromones(self, center_location, radius):  #NOTE: Unused?
         """
         Returns a list of pheromone objects from the agent's map that are within a given radius of a location.
         Used for sharing pheromone information with neighbors.
@@ -250,7 +250,7 @@ class Agent:
         return relevant_pheromones
 
 
-    def calculate_pheromone_vector(self, pheromone):
+    def calculate_pheromone_vector(self, pheromone):                    ######### VECTOR MAGNITUDES ISSUE ? FIXME
         """
         Calculate the vector contribution of a single pheromone to the agent's movement.
 
