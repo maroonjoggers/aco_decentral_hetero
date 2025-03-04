@@ -13,7 +13,12 @@ from controller import Controller
 def plot_home_and_food():
 
     #Plot home location
-    r.axes.scatter(HOME_LOCATION[0], HOME_LOCATION[1], s=100, c='g')
+    r.axes.scatter(HOME_LOCATION[0], HOME_LOCATION[1], s=100, c='b')
+
+    #Plot food locations
+    xVals = [location[0] for location in FOOD_LOCATIONS]
+    yVals = [location[1] for location in FOOD_LOCATIONS]
+    r.axes.scatter(xVals, yVals, s=100, c='g')
 
 
 # --- 1. Robotarium Initialization ---
@@ -72,12 +77,13 @@ controller = Controller(env)
 # 1) The get_agent_poses(), as stated previously, doesn't make sense and can be replaced with robotarium's built in functionality
 # 2) The only issue we may face is matching which agent we are getting the robotarium's info about and corresponding that to our info about each agent. This shouldn't be too crazy
 
+plot_home_and_food()
+
 start_time = time.time()
 while True:
     current_time = time.time() - start_time
     print(current_time)
 
-    plot_home_and_food()
 
     # need to get states and apply them
     x = r.get_poses()
