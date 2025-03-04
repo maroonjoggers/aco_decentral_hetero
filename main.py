@@ -20,12 +20,12 @@ def plot_home_and_food():
     yVals = [location[1] for location in FOOD_LOCATIONS]
     r.axes.scatter(xVals, yVals, s=100, c='g')
 
-def plot_radii(environment, g):
-    if g:
-        for graph in g:
+def plot_radii(environment, circles):
+    if circles:
+        for graph in circles:
             graph.remove()
 
-    g = []
+    circles = []
 
     for agent in environment.agents:
         center = agent.pose[:2]
@@ -36,10 +36,10 @@ def plot_radii(environment, g):
         x = center[0] + radius * np.cos(theta)
         y = center[1] + radius * np.sin(theta)
 
-        g_new = r.axes.scatter(x, y, s=2, c='y')
-        g.append(g_new)
+        circles_new = r.axes.scatter(x, y, s=2, c='y')
+        circles.append(circles_new)
 
-    return g
+    return circles
 
 
 
@@ -101,14 +101,14 @@ controller = Controller(env)
 
 plot_home_and_food()
 
-g = None
+circles = None
 
 start_time = time.time()
 while True:
     current_time = time.time() - start_time
     print(current_time)
 
-    #g = plot_radii(env, g)
+    circles = plot_radii(env, circles)
 
     # need to get states and apply them
     x = r.get_poses()
