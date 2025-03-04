@@ -138,7 +138,6 @@ class Agent:
                     self.pheromone_map.append(copy.copy(p_shared)) # Add new pheromone to local map
 
 
-
     def get_perceived_pheromones(self, center_location, radius):
         """
         Returns a list of pheromone objects from the agent's map that are within a given radius of a location.

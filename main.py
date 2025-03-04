@@ -108,7 +108,7 @@ while True:
     current_time = time.time() - start_time
     print(current_time)
 
-    #g = plot_radii(env, g)
+    g = plot_radii(env, g)
 
     # need to get states and apply them
     x = r.get_poses()
