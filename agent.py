@@ -137,7 +137,6 @@ class Agent:
                 if is_new_pheromone:
                     self.pheromone_map.append(copy.copy(p_shared)) # Add new pheromone to local map
 
-        print("PH MAP AGENT " + str(self.id) + " " + str(self.pheromone_map))
 
 
     def get_perceived_pheromones(self, center_location, radius):

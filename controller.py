@@ -57,8 +57,9 @@ class Controller:
     
             xVals = [ph.location[0] for ph in self.environment.pheromones]
             yVals = [ph.location[1] for ph in self.environment.pheromones]
-            colors = [pheromone_colors[ph.type] for ph in self.environment.pheromones]  
-            self.ph_plot = self.environment.robotarium.axes.scatter(xVals, yVals, s=15, c=colors)
+            colors = [pheromone_colors[ph.type] for ph in self.environment.pheromones]
+            strengths = [ph.strength for ph in self.environment.pheromones]
+            self.ph_plot = self.environment.robotarium.axes.scatter(xVals, yVals, s=15, c=colors, alpha=strengths)
 
 
         # 3. Pheromone Map Sharing (Decentralized Communication) - AFTER all agents have sensed and potentially laid pheromones in this timestep

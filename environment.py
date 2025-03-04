@@ -57,8 +57,6 @@ class Environment:
                 self.agents.append(agent)
                 agent_count += 1
 
-        # Handle remaining agents if num_agents not divisible by num_profiles - distribute to profiles as needed
-        assert(num_agents - agent_count, 0)
 
     def updatePoses(self, agent_Pos_array):
         '''
@@ -303,7 +301,7 @@ class Environment:
 
 
     def get_agents(self):
-        """
+        """S
         Get a list of all Agent objects in the environment.
 
         Returns:
@@ -340,4 +338,4 @@ class Pheromone:
         Decrease the pheromone strength based on its decay rate.
         """
         self.strength -= self.decay_rate * PH_LAYING_RATE # Linear decay - change decay function if needed
-        self.strength = max(0, self.strength) # Ensure strength doesn't go below zero
+        self.strength = max(0, self.strength) # Ensure strength doesn't go below zeroSSS
