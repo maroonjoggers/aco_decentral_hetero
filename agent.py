@@ -203,18 +203,18 @@ class Agent:
         #     random_angle = np.random.uniform(0, 2 * np.pi)  # Pick a random direction
         #     resultant_vector = np.array([np.cos(random_angle), np.sin(random_angle)]) *2  # Small step
         #     print(f"Agent {self.id} using random movement: {resultant_vector}")
-        if current_time - self.random_direction_change_timer >= RANDOM_REDIRECTION_RATE:
-            movement_direction += random.uniform(*RANDOM_REDIRECTION_LIMITS)
-            movement_direction = angle_wrapping(movement_direction)
-            self.random_direction_change_timer = current_time
-        
-        gauss_noise = np.random.normal(loc=movement_direction, scale=HEADING_STD )
-        resultant_vector = np.array([np.cos(gauss_noise), np.sin(gauss_noise)]) * speed
+            if current_time - self.random_direction_change_timer >= RANDOM_REDIRECTION_RATE:
+                movement_direction += random.uniform(*RANDOM_REDIRECTION_LIMITS)
+                movement_direction = angle_wrapping(movement_direction)
+                self.random_direction_change_timer = current_time
+            
+            gauss_noise = np.random.normal(loc=movement_direction, scale=HEADING_STD )
+            resultant_vector = np.array([np.cos(gauss_noise), np.sin(gauss_noise)]) * speed
 
         velocity_input = resultant_vector
         # 4. Add probabilistic element for exploration (e.g., random deviation)
         # TODO: IMPLEMENTATION NEEDED
-        velocity_input = resultant_vector # Placeholder - replace with probabilistic ACO velocity
+        # velocity_input = resultant_vector # Placeholder - replace with probabilistic ACO velocity
 
         # 5. Limit velocity magnitude based on max_speed trait
         # TODO: This is redundant to step 3, but I think its better... maybe just remove step 3?
@@ -265,10 +265,13 @@ class Agent:
 
         #Vectorized form of the pheromone
         pheromone_vector = pheromone.strength * np.array([np.cos(pheromone.direction), np.sin(pheromone.direction)])
+        pheromone_vector /= np.linalg.norm(pheromone_vector)
 
         #TODO FIXME
-        #vectorFromAgentToPh = pheromone.location - self.pose[:2]
-        #vectorFromAgentToPh /= np.linalg.norm(vectorFromAgentToPh) 
+        vectorFromAgentToPh = pheromone.location - self.pose[:2]
+        vectorFromAgentToPh /= np.linalg.norm(vectorFromAgentToPh) 
+
+        pheromone_vector += vectorFromAgentToPh
 
         '''
         # --- Define how each pheromone type influences movement direction and strength ---

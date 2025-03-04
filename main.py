@@ -154,7 +154,7 @@ arrow = None
 start_time = time.time()
 while True:
     current_time = time.time() - start_time
-    print(current_time)
+    # print(current_time)
 
     if PLOTTING:
         circles = plot_radii(env, circles)
