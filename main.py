@@ -108,7 +108,7 @@ while True:
     current_time = time.time() - start_time
     print(current_time)
 
-    g = plot_radii(env, g)
+    #g = plot_radii(env, g)
 
     # need to get states and apply them
     x = r.get_poses()
@@ -135,6 +135,7 @@ while True:
     if current_time >= MAX_TIME:
         break
 
+print("YAY! TASKS COMPLETED: " + str(env.tasks_completed))
 
 # --- 6. Experiment End and Cleanup ---
 r.call_at_scripts_end() # Robotarium cleanup and display message
