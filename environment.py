@@ -220,7 +220,7 @@ class Environment:
                 if not is_known_pheromone:
                     nearby_pheromones.append(pheromone) # Add only new pheromones
 
-        print(f"Agent at {agent_location} detected {len(nearby_pheromones)} pheromones")
+        # print(f"Agent at {agent_location} detected {len(nearby_pheromones)} pheromones")
 
         return nearby_pheromones
 
