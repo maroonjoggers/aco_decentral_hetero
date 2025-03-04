@@ -4,7 +4,7 @@ from agent import Agent
 import uuid # For generating unique IDs for pheromones
 
 class Environment:
-    def __init__(self, boundary_points, home_location, food_locations, obstacle_locations, hazard_locations, num_agents, agent_traits_profiles, agent_ICs):
+    def __init__(self, boundary_points, home_location, food_locations, obstacle_locations, hazard_locations, num_agents, agent_traits_profiles, agent_ICs, robotarium):
         """
         Initialize the Environment.
 
@@ -26,6 +26,7 @@ class Environment:
         self.agents = [] # List to store Agent objects
         self.agent_traits_profiles = agent_traits_profiles # Store trait profiles
         self.tasks_completed = 0
+        self.robotarium = robotarium
 
         self.initialize_agents(num_agents, agent_traits_profiles, agent_ICs)
 

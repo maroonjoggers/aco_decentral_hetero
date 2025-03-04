@@ -11,7 +11,7 @@ from environment import Environment
 from controller import Controller
 
 def plot_home_and_food():
-    
+
     #Plot home location
     r.axes.scatter(HOME_LOCATION[0], HOME_LOCATION[1], s=100, c='g')
 
@@ -44,7 +44,8 @@ env = Environment(
     hazard_locations=HAZARD_LOCATIONS,
     num_agents=NUM_AGENTS,
     agent_traits_profiles=AGENT_TRAIT_PROFILES,
-    agent_ICs = initalConditions
+    agent_ICs = initalConditions,
+    robotarium = r
 )
 #TODO: The above line will run the self.initialize_agents() function in the init of the Environment() class, see that
 
