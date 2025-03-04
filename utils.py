@@ -13,7 +13,6 @@ OBSTACLE_LOCATIONS = [] # Define obstacles as needed (shapes and vertices) - Exa
 HAZARD_LOCATIONS = [] # Define hazards as needed (shapes and vertices) - Example: Areas to avoid
 
 # Agent parameters
-NUM_AGENTS = 5 # TODO: This needs to be the MAX agents in the environment, since even the "dead" agents are still in the experiment
 
 # Experiment Ends when it hts this maxout time (seconds)
 MAX_TIME = 400
@@ -44,6 +43,7 @@ AGENT_TRAIT_PROFILES = {
     # Add more profiles as needed - easily extendable
 }
 
+NUM_AGENTS = sum(profile["num_agents"] for profile in AGENT_TRAIT_PROFILES.values())
 
 
 # --- Helper Functions (if any) ---

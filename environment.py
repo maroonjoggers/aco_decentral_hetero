@@ -40,15 +40,15 @@ class Environment:
         """
         profiles = list(agent_traits_profiles.keys()) # Get profile names
         num_profiles = len(profiles)
-        agents_per_profile = num_agents // num_profiles # Distribute agents evenly - adjust as needed
+        
 
         agent_count = 0
         for i in range(num_profiles):
             profile_name = profiles[i]
             traits = agent_traits_profiles[profile_name] # Get traits for this profile
-            for _ in range(agents_per_profile): # Create agents for this profile
-                #initial_pose = self.get_random_pose_in_bounds() # Helper function (below)       #TODO: This doesn't make sense, we don't want to initalize the bots randomly throughout the env. See notes in function
+            agents_per_profile = traits['num_agents']
 
+            for _ in range(agents_per_profile): # Create agents for this profile
                 initial_pose = agent_ICs[:,agent_count]         #NEW IC HANDLING
 
                 agent = Agent(agent_id=agent_count, initial_pose=initial_pose, traits=traits)
@@ -56,19 +56,7 @@ class Environment:
                 agent_count += 1
 
         # Handle remaining agents if num_agents not divisible by num_profiles - distribute to profiles as needed
-        remaining_agents = num_agents - agent_count
-        profile_index = 0
-        for _ in range(remaining_agents):
-            profile_name = profiles[profile_index]
-            traits = agent_traits_profiles[profile_name]
-            #initial_pose = self.get_random_pose_in_bounds()                                     #TODO: same note as get_random_pose_in_bounds as stated above
-
-            initial_pose = agent_ICs[:,agent_count]         #NEW IC HANDLING
-
-            agent = Agent(agent_id=agent_count, initial_pose=initial_pose, traits=traits)       
-            self.agents.append(agent)
-            agent_count += 1
-            profile_index = (profile_index + 1) % num_profiles # Cycle through profiles
+        assert(num_agents - agent_count, 0)
 
     def updatePoses(self, agent_Pos_array):
         '''
