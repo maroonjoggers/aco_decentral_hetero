@@ -18,9 +18,9 @@ HAZARD_LOCATIONS = [] # Define hazards as needed (shapes and vertices) - Example
 MAX_TIME = 120
 
 # INITAL CONDITIONS
-INTER_AGENT_DIST = 0.40
+INTER_AGENT_DIST = 0.25
 
-PH_LAYING_RATE = 1.0
+PH_LAYING_RATE = 0.8
 
 RANDOM_REDIRECTION_RATE = 5.0
 RANDOM_REDIRECTION_LIMITS = [np.pi/4, 2*np.pi/3]
@@ -37,7 +37,7 @@ AGENT_TRAIT_PROFILES = {
         "max_speed": 0.18, # m/s
         "initial_pheromone_strength": 1.0, # Initial pheromone strength for agents of this type
         "communication_radius": 0.52, # meters
-        "pheromone_lifetime": 80.0, # Decay rate per timestep
+        "pheromone_lifetime": 150.0, # Decay rate per timestep
     },
     "Profile_Type_B": { # Example profile 2
         "num_agents": 0, # Number of agents with this profile - can be overridden

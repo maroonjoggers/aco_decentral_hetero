@@ -271,9 +271,9 @@ class Agent:
 
         #TODO FIXME
         vectorFromAgentToPh = pheromone.location - self.pose[:2]
-        vectorFromAgentToPh /= np.linalg.norm(vectorFromAgentToPh) 
+        vectorFromAgentToPh /= 10*pheromone.strength*np.linalg.norm(vectorFromAgentToPh) 
 
-        pheromone_vector += vectorFromAgentToPh
+        pheromone_vector += vectorFromAgentToPh    
 
         '''
         # --- Define how each pheromone type influences movement direction and strength ---
