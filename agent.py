@@ -144,7 +144,7 @@ class Agent:
 
 
 
-    def get_perceived_pheromones(self, center_location, radius):  #NOTE: Unused?
+    def get_perceived_pheromones(self, relevant_pheromones, center_location, radius):  #NOTE: Unused?
         """
         Returns a list of pheromone objects from the agent's map that are within a given radius of a location.
         Used for sharing pheromone information with neighbors.
@@ -157,7 +157,7 @@ class Agent:
             list: List of Pheromone objects within the radius.
         """
         perceived_pheromones = []
-        for pheromone in self.pheromone_map:
+        for pheromone in relevant_pheromones:
             distance = np.linalg.norm(pheromone.location - center_location) # Distance calculation
             if distance <= radius:
                 perceived_pheromones.append(pheromone)
@@ -181,6 +181,7 @@ class Agent:
         # --- ACO Velocity Calculation Logic ---
         # 1. Get relevant pheromones from agent's map and environment
         relevant_pheromones = self.get_relevant_pheromones_for_state(environment)       #TODO: Needs work, check function
+        relevant_pheromones = self.get_perceived_pheromones(relevant_pheromones, self.pose[:2], self.sensing_radius)
 
         # 2. Calculate resultant pheromone vector (sum of vector contributions of pheromones)
         resultant_vector = np.array([0.0, 0.0])
@@ -196,20 +197,20 @@ class Agent:
             speed = np.linalg.norm(resultant_vector)
         else:
             movement_direction = self.pose[2]
-            speed = self.max_speed * scaling
+            speed = self.max_speed
 
         # 4. Add probabilistic element for exploration (e.g., random deviation) - IMPLEMENTATION NEEDED
         # if np.linalg.norm(resultant_vector) < 1e-3:
         #     random_angle = np.random.uniform(0, 2 * np.pi)  # Pick a random direction
         #     resultant_vector = np.array([np.cos(random_angle), np.sin(random_angle)]) *2  # Small step
         #     print(f"Agent {self.id} using random movement: {resultant_vector}")
-            if current_time - self.random_direction_change_timer >= RANDOM_REDIRECTION_RATE:
-                movement_direction += random.uniform(*RANDOM_REDIRECTION_LIMITS)
-                movement_direction = angle_wrapping(movement_direction)
-                self.random_direction_change_timer = current_time
+            # if current_time - self.random_direction_change_timer >= RANDOM_REDIRECTION_RATE:
+            #     movement_direction += (random.uniform(*RANDOM_REDIRECTION_LIMITS) * random.choice([-1, 1]))
+            #     movement_direction = angle_wrapping(movement_direction)
+            #     self.random_direction_change_timer = current_time
             
-            gauss_noise = np.random.normal(loc=movement_direction, scale=HEADING_STD )
-            resultant_vector = np.array([np.cos(gauss_noise), np.sin(gauss_noise)]) * speed
+        gauss_noise = np.random.normal(loc=movement_direction, scale=HEADING_STD )
+        resultant_vector = np.array([np.cos(gauss_noise), np.sin(gauss_noise)]) * speed
 
         velocity_input = resultant_vector
         # 4. Add probabilistic element for exploration (e.g., random deviation)
@@ -219,8 +220,9 @@ class Agent:
         # 5. Limit velocity magnitude based on max_speed trait
         # TODO: This is redundant to step 3, but I think its better... maybe just remove step 3?
         speed_magnitude = np.linalg.norm(velocity_input)
-        if speed_magnitude > self.max_speed:
-            velocity_input = velocity_input * (self.max_speed / speed_magnitude)
+        # if speed_magnitude > self.max_speed:
+        velocity_input = velocity_input * (self.max_speed / speed_magnitude)
+        # velocity_input /= np.linalg.norm(velocity_input)
 
 
         return velocity_input

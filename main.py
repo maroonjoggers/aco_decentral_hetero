@@ -20,7 +20,7 @@ def plot_home_and_food():
     yVals = [location[1] for location in FOOD_LOCATIONS]
     r.axes.scatter(xVals, yVals, s=100, c='g')
 
-def plot_radii(environment, circles, num_points=50):
+def plot_radii(environment, circles, num_points=30):
     if circles:
         for graph in circles:
             graph.remove()
@@ -158,7 +158,7 @@ while True:
 
     if PLOTTING:
         circles = plot_radii(env, circles)
-        #edges = plot_edges(env, edges)
+        edges = plot_edges(env, edges)
         # arrow = plot_arrow(env, arrow)      #FIXME
 
     # need to get states and apply them
@@ -176,6 +176,7 @@ while True:
     # c) Convert SI velocities to Unicycle Velocities (Robotarium-compatible)
     #agent_velocities_uni = si_to_uni_dyn(safe_velocities_si, env.get_agent_poses()) # SI to Uni velocity transformation
     agent_velocities_uni = si_to_uni_dyn(safe_velocities_si, x) # SI to Uni velocity transformation
+    # agent_velocities_uni = si_to_uni_dyn(agent_velocities_si, x) # SI to Uni velocity transformation
 
     # d) Set Velocities in Robotarium - Command robots to move
     r.set_velocities(np.arange(NUM_AGENTS), agent_velocities_uni)
