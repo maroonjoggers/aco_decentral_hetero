@@ -9,6 +9,8 @@ import time
 from utils import * # Import configuration parameters and agent trait profiles
 from environment import Environment
 from controller import Controller
+from rl.plot_lambda import plot_all_agents
+
 
 def plot_home_and_food():
 
@@ -189,5 +191,7 @@ while True:
 
 print("YAY! TASKS COMPLETED: " + str(env.tasks_completed))
 
-# --- 6. Experiment End and Cleanup ---
+# --- 6. Experiment End, RL plots, and Cleanup ---
+controller.close()
+plot_all_agents(NUM_AGENTS)
 r.call_at_scripts_end() # Robotarium cleanup and display message
