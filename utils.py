@@ -116,6 +116,17 @@ def angle_wrapping(angle):
     return np.arctan2(np.sin(angle), np.cos(angle))
 
 
+def communication_radius_list():
+    radii = []
+    for profile in AGENT_TRAIT_PROFILES.values():
+        num = profile.get("num_agents", 0)
+        radius = profile.get("communication_radius", 0)
+        radii.extend([radius] * num)
+
+    return radii
+
+
+
 # --- Functions to Generate Graph Laplacians (if needed for communication or control) ---
 # You can include functions like cycle_GL, completeGL, etc., from your Robotarium utilities here if you plan to use graph-based methods.
 # For now, assuming communication is radius-based and graph Laplacians are not immediately needed.

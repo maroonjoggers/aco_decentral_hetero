@@ -1,7 +1,8 @@
 import numpy as np
 from cvxopt import matrix, solvers
+import utils
 
-def network_barriers(U, X, radii):
+def network_barriers(U, X):
     '''
     Ensures input keeps at least 1 agent within connection (as long as we started within connection)
 
@@ -12,7 +13,9 @@ def network_barriers(U, X, radii):
     Outputs:
         newU: New agent velocity
     '''
-    gamma = 20.0
+    GAMMA = 20.0
+
+    radii = utils.communication_radius_list()
 
     N = X.shape[1]
 
@@ -33,13 +36,13 @@ def network_barriers(U, X, radii):
 
 
         h = radii[i]**2 - dists[j]**2                              #TODO: Not sure if radii list is actually how we'll access things
-        b[row] = -gamma*h**3
+        b[i] = -GAMMA*h**3
         
         #populate
-        A[row, i*2] = 2*(X[0,i]-X[0,j])
-        A[row, i*2 + 1] = 2*(X[1,i]-X[1,j])
-        A[row, j*2] = -2*(X[0,i]-X[0,j])
-        A[row, j*2 + 1] = -2*(X[1,i]-X[1,j])
+        A[i, i*2] = 2*(X[0,i]-X[0,j])
+        A[i, i*2 + 1] = 2*(X[1,i]-X[1,j])
+        A[i, j*2] = -2*(X[0,i]-X[0,j])
+        A[i, j*2 + 1] = -2*(X[1,i]-X[1,j])
 
     A = matrix(A)
     b = matrix(b)
@@ -51,6 +54,3 @@ def network_barriers(U, X, radii):
 
     return newU
 
-
-
-network_barriers()
