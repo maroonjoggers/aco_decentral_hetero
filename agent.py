@@ -32,6 +32,8 @@ class Agent:
 
         self.velocity_vector = [0, 0]
 
+        self.found_goals_counter = 0
+
         # self.motion_update_interval = np.random.randint(5, 20)  # Update motion every 5-20 steps
         # self.motion_update_counter = 0  # Counter to track updates
         # self.current_velocity = np.array([0.0, 0.0])  # Stores last computed velocity
@@ -58,9 +60,11 @@ class Agent:
         if self.state == "Foraging":
             if nearby_food:
                 self.state = "Returning"
+                self.found_goals_counter += 1
         elif self.state == "Returning":
             if nearby_home:
                 self.state = "Foraging"
+                self.found_goals_counter += 1
                 environment.tasks_completed +=1
                 print(f"Tasks completed: {environment.tasks_completed}")
 

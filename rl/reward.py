@@ -1,14 +1,34 @@
 # We can design the reward as we wish, depending on designed state vector
 
-def compute_reward(state, critical_distance, desired_distance):
-    distance_to_neighbor = state[0]
-    exploration_score = state[1]
-    number_of_neighbors = state[2]
+from environment import *
+from utils import NUM_AGENTS
 
-    # Reward shaping
-    exploration_gain = exploration_score * 1.0
-    safe_connectivity = max(0, 1.0 - distance_to_neighbor / critical_distance)
-    neighbor_bonus = number_of_neighbors * 0.1
-    risky_distance_penalty = -abs(distance_to_neighbor - desired_distance)
+def compute_reward(agent, env, lambda_value):
 
-    return exploration_gain + safe_connectivity + neighbor_bonus + risky_distance_penalty
+    # Penalize disconnection hard
+    num_neighbors = len(env.get_agents_within_communication_radius(agent, agent.communication_radius))
+
+    if num_neighbors == 0:
+        return -10.0
+    
+    # Compute local_density based on number of neighbors
+    local_density = num_neighbors / NUM_AGENTS
+
+    # Reward 1: trail-following encouragement when sparse
+    reward_follow = (1 - local_density) * lambda_value
+
+    # Reward 2: avoidance encouragement when crowded
+    reward_avoid = local_density * (1 - lambda_value)
+
+    # Reward 3: smooth motion or velocity alignment reward
+    # reward_alignment = velocity_alignment * lambda_value * 0.1
+
+    # Reward 4: finding food or getting back home, cumulative
+    reward_success = agent.found_goals_counter
+
+
+
+    # Final reward (weight terms as needed)
+    total_reward = reward_follow + reward_avoid + reward_success
+
+    return total_reward

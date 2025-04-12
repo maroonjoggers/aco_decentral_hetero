@@ -44,15 +44,15 @@ class Controller:                                                       #TODO: I
 
             # Define agent-specific functions
             def get_state_fn(agent_index=i):
-                return get_state_for_agent(agent_index)
+                return get_state_for_agent(self.environment.agents[agent_index])
 
             def apply_lambda_fn(lambda_value, agent_index=i):
-                control_input = qp_solver(..., lambda_value, get_state_for_agent(agent_index), ...)
+                control_input = qp_solver(..., lambda_value, get_state_for_agent(self.environment.agents[agent_index]), ...)
                 # apply_control_to_agent(agent_index, control_input)
                 return control_input
 
-            def compute_reward_fn(state):
-                return compute_reward(state, critical_distance, desired_distance)
+            def compute_reward_fn(lambda_value):
+                return compute_reward(self.environment.agents[i], self.environment, lambda_value)
 
             # Initialize RL agent
             rl_agent = AgentSAC(

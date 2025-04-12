@@ -308,6 +308,11 @@ class Environment:
             list: List of Agent objects.
         """
         return self.agents
+    
+        
+    def get_state_for_agent(self, agent_idx):
+        pose = self.get_agent_poses(agent_idx)
+        #TODO: ......................................................DEFINE STATE VECTOR
 
 
 # --- Pheromone Class (Inner class within Environment or separate file pheromone.py - CHOOSE ONE) ---
