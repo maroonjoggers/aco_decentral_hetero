@@ -36,7 +36,7 @@ AGENT_TRAIT_PROFILES = {
         "sensing_radius": 0.2, # meters - Example values - ADJUST AS NEEDED
         "max_speed": 0.18, # m/s
         "initial_pheromone_strength": 1.0, # Initial pheromone strength for agents of this type
-        "communication_radius": 0.52, # meters
+        "communication_radius": 0.5, # meters
         "pheromone_lifetime": 150.0, # Decay rate per timestep
     },
     "Profile_Type_B": { # Example profile 2
@@ -81,6 +81,10 @@ def determineInitalConditions():
         3xN numpy array which represents the IC's of each bot
     '''
 
+    RANDOM_PERTUBATION_MAX = 0.005
+    RANDOM_PERTUBATION = False
+
+
     positions = []
     layers = 0
 
@@ -93,6 +97,10 @@ def determineInitalConditions():
                     angle = np.pi / 3 * i  # 60-degree increments
                     x_offset = (layers - j) * INTER_AGENT_DIST * np.cos(angle) + j * INTER_AGENT_DIST * np.cos(angle + np.pi / 3)
                     y_offset = (layers - j) * INTER_AGENT_DIST * np.sin(angle) + j * INTER_AGENT_DIST * np.sin(angle + np.pi / 3)
+                    if RANDOM_PERTUBATION:
+                        x_offset += np.random.uniform(-RANDOM_PERTUBATION_MAX, RANDOM_PERTUBATION_MAX)
+                        y_offset += np.random.uniform(-RANDOM_PERTUBATION_MAX, RANDOM_PERTUBATION_MAX)
+                    #print("X OFFSET: " + str(x_offset))
                     positions.append((HOME_LOCATION[0] + x_offset, HOME_LOCATION[1] + y_offset))
                     if len(positions) >= NUM_AGENTS:
                         break
@@ -114,6 +122,17 @@ def angle_wrapping(angle):
         Ensures angle is between -pi and pi.
     """
     return np.arctan2(np.sin(angle), np.cos(angle))
+
+
+def communication_radius_list():
+    radii = []
+    for profile in AGENT_TRAIT_PROFILES.values():
+        num = profile.get("num_agents", 0)
+        radius = profile.get("communication_radius", 0)
+        radii.extend([radius] * num)
+
+    return radii
+
 
 
 # --- Functions to Generate Graph Laplacians (if needed for communication or control) ---
