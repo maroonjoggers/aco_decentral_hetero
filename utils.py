@@ -27,7 +27,7 @@ USE_PHEROMONE_LAYING_OFFSET = True
 PHEROMONE_LAYING_OFFSET = 0.05
 
 #PULL FACTOR
-PHEROMONE_PULL_FACTOR = 0.5             #Between 0 and 1, indicates strength that pheromones "pull" the bot into their location (in addition to following direction)
+PHEROMONE_PULL_FACTOR = 0.25             #Between 0 and 1, indicates strength that pheromones "pull" the bot into their location (in addition to following direction)
 
 RANDOM_REDIRECTION_RATE = 5.0
 RANDOM_REDIRECTION_LIMITS = [np.pi/4, 2*np.pi/3]
