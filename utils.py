@@ -36,7 +36,7 @@ AGENT_TRAIT_PROFILES = {
         "sensing_radius": 0.2, # meters - Example values - ADJUST AS NEEDED
         "max_speed": 0.18, # m/s
         "initial_pheromone_strength": 1.0, # Initial pheromone strength for agents of this type
-        "communication_radius": 0.52, # meters
+        "communication_radius": 0.5, # meters
         "pheromone_lifetime": 150.0, # Decay rate per timestep
     },
     "Profile_Type_B": { # Example profile 2
