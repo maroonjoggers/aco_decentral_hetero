@@ -22,6 +22,13 @@ INTER_AGENT_DIST = 0.25
 
 PH_LAYING_RATE = 0.8
 
+#TWO LANE PATH FORMATION
+USE_PHEROMONE_LAYING_OFFSET = True
+PHEROMONE_LAYING_OFFSET = 0.05
+
+#PULL FACTOR
+PHEROMONE_PULL_FACTOR = 0.5             #Between 0 and 1, indicates strength that pheromones "pull" the bot into their location (in addition to following direction)
+
 RANDOM_REDIRECTION_RATE = 5.0
 RANDOM_REDIRECTION_LIMITS = [np.pi/4, 2*np.pi/3]
 HEADING_STD = np.pi/6

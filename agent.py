@@ -92,10 +92,18 @@ class Agent:
             pheromone_type = "Avoidance"
 
         if pheromone_type:
+            if USE_PHEROMONE_LAYING_OFFSET:
+                ph_x = self.pose[0] - np.sin(self.pose[2]) * PHEROMONE_LAYING_OFFSET
+                ph_y = self.pose[1] + np.cos(self.pose[2]) * PHEROMONE_LAYING_OFFSET
+                ph_location = [ph_x, ph_y]
+            else:
+                ph_location = [self.pose[0], self.pose[1]]
+
             pheromone = environment.create_pheromone(
                 agent_id=self.id,
                 type=pheromone_type,
-                location=self.pose[:2].copy(),
+                #location=self.pose[:2].copy(),
+                location=ph_location,
                 direction=angle_wrapping(np.pi+self.pose[2]),        #Reverse the direction  
                 strength=self.initial_pheromone_strength,
                 lifeTime=self.pheromone_lifetime
@@ -144,7 +152,7 @@ class Agent:
 
 
 
-    def get_perceived_pheromones(self, relevant_pheromones, center_location, radius):  #NOTE: Unused?
+    def get_perceived_pheromones(self, relevant_pheromones, center_location, radius):
         """
         Returns a list of pheromone objects from the agent's map that are within a given radius of a location.
         Used for sharing pheromone information with neighbors.
@@ -180,7 +188,7 @@ class Agent:
 
         # --- ACO Velocity Calculation Logic ---
         # 1. Get relevant pheromones from agent's map and environment
-        relevant_pheromones = self.get_relevant_pheromones_for_state(environment)       #TODO: Needs work, check function
+        relevant_pheromones = self.get_relevant_pheromones_for_state(environment)
         relevant_pheromones = self.get_perceived_pheromones(relevant_pheromones, self.pose[:2], self.sensing_radius)
 
         # 2. Calculate resultant pheromone vector (sum of vector contributions of pheromones)
@@ -238,7 +246,6 @@ class Agent:
         Returns:
             list: List of relevant Pheromone objects from the agent's pheromone map.
         """
-        #TODO: There is no check of the pheromones which are actually within the pheromone sensing radius, its literally going to look at all the pheromones lmao
 
         relevant_pheromones = []
         if self.state == "Foraging":
@@ -271,7 +278,7 @@ class Agent:
 
         #TODO FIXME
         vectorFromAgentToPh = pheromone.location - self.pose[:2]
-        vectorFromAgentToPh /= 10*pheromone.strength*np.linalg.norm(vectorFromAgentToPh) 
+        vectorFromAgentToPh *= PHEROMONE_PULL_FACTOR*pheromone.strength/np.linalg.norm(vectorFromAgentToPh) 
 
         pheromone_vector += vectorFromAgentToPh    
 
