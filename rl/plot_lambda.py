@@ -29,9 +29,12 @@ def read_agent_log(agent_index, log_folder='logs'):
 
 def save_plot(fig, filename):
     timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
-    filepath = os.path.join('plots', f'{filename}_{timestamp}.png')
+    folder = os.path.join('plots', timestamp)
+    os.makedirs(folder, exist_ok=True)
+    filepath = os.path.join(folder, f'{filename}.png')
     fig.savefig(filepath)
     print(f"[Saved] {filepath}")
+
 
 def plot_combined_agents(agent_data, metric='lambda'):
     fig = plt.figure(figsize=(8, 5))
@@ -65,7 +68,7 @@ def plot_combined_agents(agent_data, metric='lambda'):
     # Save plot
     save_plot(fig, f'combined_{metric}')
 
-    plt.show()
+    # plt.show()
 
 def plot_all_agents(num_agents=NUM_AGENTS, log_folder='logs'):
     agent_data = {}
@@ -81,6 +84,7 @@ def plot_all_agents(num_agents=NUM_AGENTS, log_folder='logs'):
         plot_combined_agents(agent_data, metric='lambda')
         plot_combined_agents(agent_data, metric='reward')
         plot_combined_agents(agent_data, metric='cumulative_reward')
+        plt.show()
     else:
         print("No agent logs found!")
 

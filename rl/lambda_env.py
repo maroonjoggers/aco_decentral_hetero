@@ -1,5 +1,6 @@
 import gym
 import numpy as np
+from utils import MAX_TIME
 
 class LambdaEnv(gym.Env):
     """
@@ -37,14 +38,14 @@ class LambdaEnv(gym.Env):
         return np.array(self.state, dtype=np.float32)
 
 
-    def step(self, action):
+    def step(self, action, current_time):
         lambda_value = float(action[0])  # Convert action to scalar
 
         # Update state and compute reward
         next_state = self.get_state_fn()
         reward = self.compute_reward_fn(next_state, lambda_value)
 
-        done = False  # Episode end condition, optional
+        done = current_time >= MAX_TIME  # Episode end condition, optional
 
         self.state = next_state
 
