@@ -206,5 +206,5 @@ print("YAY! TASKS COMPLETED: " + str(env.tasks_completed))
 
 # --- 6. Experiment End, RL plots, and Cleanup ---
 controller.close()
-plot_all_agents(NUM_AGENTS)
+if PLOT_LAMBDA: plot_all_agents(NUM_AGENTS)
 r.call_at_scripts_end() # Robotarium cleanup and display message
