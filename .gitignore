@@ -2,6 +2,6 @@ __pycache__/
 rl/__pycache__/
 venv/
 .env
-logs/
+# logs/
 # models/
-plots/
+# plots/
