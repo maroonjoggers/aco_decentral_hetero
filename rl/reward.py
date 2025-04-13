@@ -7,8 +7,7 @@ def compute_reward(state_vector, lambda_value):
     local_density, x, y, vx, vy, is_returning, progress = state_vector
 
     # Penalize disconnection hard
-    if local_density == 0.0:
-        return -10.0
+    disconnection_penalty = -5.0 if local_density == 0.0 else 0.0 
 
     # Reward 1: trail-following encouragement when sparse
     reward_follow = (1 - local_density) * lambda_value
@@ -32,6 +31,6 @@ def compute_reward(state_vector, lambda_value):
 
 
     # Final reward (weight terms as needed)
-    total_reward = reward_follow + reward_avoid + reward_progress + stagnation_penalty
+    total_reward = reward_follow + reward_avoid + reward_progress + stagnation_penalty + disconnection_penalty
 
     return total_reward
