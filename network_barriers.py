@@ -46,7 +46,9 @@ def network_barriers(U, X, env):
 
         j = np.argmin(dists)
 
-        if dists[j] <= radii[i] and i not in returning_agents_indices:
+        ACTIVATION_THRESHOLD = radii[i] / 2
+
+        if dists[j] <= radii[i] and i not in returning_agents_indices and dists[j] >= ACTIVATION_THRESHOLD:
             h = radii[i]**2 - dists[j]**2                              #TODO: Not sure if radii list is actually how we'll access things
             b[i] = -GAMMA*h**3
             

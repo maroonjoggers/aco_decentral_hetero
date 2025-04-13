@@ -23,7 +23,7 @@ AGENT_RADIUS = 0.05             #Used in obstacle detection
 MAX_TIME = 120
 
 # INITAL CONDITIONS
-INTER_AGENT_DIST = 0.4         # Was 0.25 during the midpoint
+INTER_AGENT_DIST = 0.3         # Was 0.25 during the midpoint
 
 PH_LAYING_RATE = 1.0            # Was 0.8 during the midpoint (This is seconds between laying pheromones)
 
@@ -47,10 +47,10 @@ PLOTTING = True
 AGENT_TRAIT_PROFILES = {
     "Profile_Type_A": { # Example profile 1
         "num_agents": 5, # Number of agents with this profile - can be overridden in main script
-        "sensing_radius": 0.2, # meters - Example values - ADJUST AS NEEDED
+        "sensing_radius": 0.12, # meters - Was 0.2 AT MIDPOINT
         "max_speed": 0.18, # m/s
         "initial_pheromone_strength": 1.0, # Initial pheromone strength for agents of this type
-        "communication_radius": 0.50, # meters
+        "communication_radius": 0.9, # meters           #Was 0.2 AT MIDPOINT
         "pheromone_lifetime": 150.0, # Decay rate per timestep
     },
     "Profile_Type_B": { # Example profile 2
