@@ -13,7 +13,7 @@ class AgentSAC:
         self.episode_reward = 0.0
 
         self.env = LambdaEnv(get_state_fn, compute_reward_fn)
-        self.model = SAC("MlpPolicy", self.env, verbose=0)
+        self.model = SAC("MlpPolicy", self.env, verbose=0, learning_rate=1e-4, buffer_size=10000000)
         self.model._logger = configure()
 
         # Optional: load existing model
@@ -38,11 +38,7 @@ class AgentSAC:
         self.episode_reward += reward
 
         # Log lambda and reward
-        if done:
-            self.logger.writerow(["EPISODE_END", "", "", self.episode_reward])
-            self.episode_reward = 0.0
-        else:
-            self.logger.writerow([current_time, lambda_value, reward, ""])
+        self.logger.writerow([current_time, lambda_value, reward, self.episode_reward])
 
 
         # Add to replay buffer

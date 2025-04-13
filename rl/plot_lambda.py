@@ -37,6 +37,16 @@ def save_plot(fig, filename):
     fig.savefig(filepath)
     print(f"[Saved] {filepath}")
 
+def plot_individual_agent(agent_index, timesteps, lambdas, rewards, cumulative_rewards):
+    fig, ax = plt.subplots(figsize=(8, 5))
+
+    ax.plot(timesteps, lambdas)
+    ax.set_xlabel('Timestep')
+    ax.set_ylabel('Lambda Value')
+    ax.set_title(f'Agent {agent_index} Lambda Evolution')
+    ax.grid(True)
+
+    save_plot(fig, f'agent_{agent_index}_lambda')
 
 def plot_combined_agents(agent_data, metric='lambda'):
     fig = plt.figure(figsize=(8, 5))
@@ -80,7 +90,7 @@ def plot_all_agents(num_agents=NUM_AGENTS, log_folder='logs'):
         if data:
             agent_data[i] = data
             # Optional: plot individual agents
-            # plot_individual_agent(i, *data)
+            plot_individual_agent(i, *data)
 
     if agent_data:
         plot_combined_agents(agent_data, metric='lambda')
