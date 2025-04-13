@@ -19,11 +19,13 @@ def read_agent_log(agent_index, log_folder='logs'):
         reader = csv.reader(f)
         next(reader)  # Skip header
         for row in reader:
-            timesteps.append(float(row[0]))
-            lambdas.append(float(row[1]))
-            rewards.append(float(row[2]))
-            # Handle empty cumulative reward values (logged as empty string)
-            cumulative_rewards.append(float(row[3]) if row[3] != "" else None)
+            try:
+                timesteps.append(float(row[0]))
+                lambdas.append(float(row[1]))
+                rewards.append(float(row[2]))
+                cumulative_rewards.append(float(row[3]) if row[3] != "" else None)
+            except ValueError:
+                continue  # skip non-numeric lines
 
     return timesteps, lambdas, rewards, cumulative_rewards
 

@@ -278,8 +278,13 @@ def network_barriers_with_lambda(U, X, env, lambda_values):
 
             A_list.append(A_row)
 
-    A = matrix(np.vstack(A_list))
-    b = matrix(np.array(b_list))
+    if A_list:
+        A = matrix(np.vstack(A_list))
+        b = matrix(np.array(b_list))
+    else:
+        # No connectivity constraints, use empty matrix
+        A = matrix(np.zeros((1, total_vars)))
+        b = matrix(np.zeros(1))
 
     # === Solve QP ===
     solvers.options['show_progress'] = False  # Optional: silence solver output
