@@ -18,6 +18,10 @@ class AgentSAC:
         if os.path.exists(model_path):
             self.model = SAC.load(model_path, env=self.env)
 
+            buffer_path = f'models/agent_{self.agent_index}_replay_buffer.pkl'
+            if os.path.exists(buffer_path):
+                self.model.load_replay_buffer(buffer_path)
+
     def select_lambda(self, current_time):
         obs = self.env.state
         action, _ = self.model.predict(obs, deterministic=False)
@@ -47,3 +51,5 @@ class AgentSAC:
 
     def save(self):
         self.model.save(f'models/agent_{self.agent_index}_lambda_sac')
+        if self.model.replay_buffer is not None:
+            self.model.save_replay_buffer(f'models/agent_{self.agent_index}_replay_buffer.pkl')

@@ -12,6 +12,8 @@ from controller import Controller
 from network_barriers import *
 from rl.plot_lambda import plot_all_agents
 
+import os
+
 
 def plot_home_and_food():
 
@@ -128,6 +130,15 @@ env = Environment(
 # Instantiate Controller, passing the Environment object
 controller = Controller(env)
 
+"""RL Episodes Tracking"""
+episode_counter_path = "models/episode_counter.txt"
+start_episode = 1
+if os.path.exists(episode_counter_path):
+    with open(episode_counter_path, "r") as f:
+        start_episode = int(f.read()) + 1
+
+print(f"=== Starting Episode {start_episode} ===")
+
 
 # --- 4. Set Initial Poses in Robotarium ---
 #TODO: This is all a mess. There is no such thing as r.set_poses. The below 2 lines can basically just go away. We don't need a separate function to get poses because that's part of the robotarium functionality
@@ -204,7 +215,12 @@ while True:
 
 print("YAY! TASKS COMPLETED: " + str(env.tasks_completed))
 
-# --- 6. Experiment End, RL plots, and Cleanup ---
+# --- 6. Experiment End, RL plots, Saving, and Cleanup ---
+print(f"=== Episode {start_episode} complete! ===")
+os.makedirs("models", exist_ok=True)
+with open(episode_counter_path, "w") as f:
+    f.write(str(start_episode))
+
 controller.close()
 if PLOT_LAMBDA: plot_all_agents(NUM_AGENTS)
 r.call_at_scripts_end() # Robotarium cleanup and display message
