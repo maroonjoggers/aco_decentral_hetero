@@ -46,9 +46,9 @@ class Controller:                                                       #TODO: I
 
             # Define agent-specific functions
             def get_state_fn(agent_index=i):
-                return get_state_for_agent(self.environment.agents[agent_index])
+                return self.environment.agents[agent_index].get_state_vector()
 
-            def compute_reward_fn(lambda_value):
+            def compute_reward_fn(state, lambda_value):
                 return compute_reward(self.environment.agents[i], self.environment, lambda_value)
 
             # Initialize RL agent

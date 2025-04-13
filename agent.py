@@ -335,3 +335,7 @@ class Agent:
             numpy.ndarray: The pose [x, y, theta].
         """
         return self.pose
+    
+    def get_state_vector(self):
+        pass
+        #TODO

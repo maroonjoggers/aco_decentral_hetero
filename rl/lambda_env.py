@@ -42,7 +42,7 @@ class LambdaEnv(gym.Env):
 
         # Update state and compute reward
         next_state = self.get_state_fn()
-        reward = self.compute_reward_fn(lambda_value)
+        reward = self.compute_reward_fn(next_state, lambda_value)
 
         done = False  # Episode end condition, optional
 
