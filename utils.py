@@ -9,7 +9,11 @@ TIMESTEP_SIZE = 0.033 # Robotarium default timestep (seconds)
 # Environment parameters
 HOME_LOCATION = [0.0, 0.0] # [x, y] - Example home location at the center
 FOOD_LOCATIONS = [[1.0, 0.5], [-1.0, -0.5], [-1.5,-0.8], [1.5,-0.8], [-1.5,0.8], [1.5,0.8]] # Example food locations - list of [x, y]
-OBSTACLE_LOCATIONS = [] # Define obstacles as needed (shapes and vertices) - Example: Rectangles, circles, polygons
+OBSTACLE_LOCATIONS = [
+    {"shape": "rectangle", "center": [0.75, 0.5], "width": 0.2, "height": 0.3},
+    {"shape": "rectangle", "center": [-0.75, 0.75], "width": 0.25, "height": 0.15},
+    # Add more obstacles here as dictionaries with "shape", "center", "width", "height"
+]
 HAZARD_LOCATIONS = [] # Define hazards as needed (shapes and vertices) - Example: Areas to avoid
 
 # Agent parameters
@@ -25,6 +29,8 @@ PH_LAYING_RATE = 0.8
 #TWO LANE PATH FORMATION
 USE_PHEROMONE_LAYING_OFFSET = True
 PHEROMONE_LAYING_OFFSET = 0.05
+
+AVOID_PHEROMONE_LAYING_OFFSET = 0.15
 
 #PULL FACTOR
 PHEROMONE_PULL_FACTOR = 0.25             #Between 0 and 1, indicates strength that pheromones "pull" the bot into their location (in addition to following direction)
@@ -139,6 +145,9 @@ def communication_radius_list():
         radii.extend([radius] * num)
 
     return radii
+
+
+
 
 
 

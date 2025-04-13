@@ -5,6 +5,7 @@ from rps.utilities.transformations import *
 from rps.utilities.barrier_certificates import *
 from rps.utilities.controllers import *
 import time
+import matplotlib.patches as patches
 
 from utils import * # Import configuration parameters and agent trait profiles
 from environment import Environment
@@ -88,6 +89,15 @@ def plot_arrow(environment, arrow, num_points=10):      #FIXME
 
     return arrow
 
+def plot_obstacles():
+    for obstacle in OBSTACLE_LOCATIONS:
+        if obstacle["shape"] == "rectangle":
+            center_x, center_y = obstacle["center"]
+            width = obstacle["width"]
+            height = obstacle["height"]
+            rect = patches.Rectangle((center_x - width / 2, center_y - height / 2), width, height, linewidth=1, edgecolor='r', facecolor='r', alpha=0.5)
+            r.axes.add_patch(rect)
+
 
 
 # --- 1. Robotarium Initialization ---
@@ -147,6 +157,7 @@ controller = Controller(env)
 # 2) The only issue we may face is matching which agent we are getting the robotarium's info about and corresponding that to our info about each agent. This shouldn't be too crazy
 
 plot_home_and_food()
+plot_obstacles()
 
 circles = None
 edges = None
@@ -171,7 +182,7 @@ while True:
     agent_velocities_si = controller.run_step(current_time) # TODO: This is where the largest chunk of our actual algorithm functionality lies
 
     # b.1) Apply NETWORK barriers for staying in communication
-    agent_velocities_si = network_barriers(agent_velocities_si, x[:2], env)
+    #agent_velocities_si = network_barriers(agent_velocities_si, x[:2], env)
 
     # b.2) Apply SAFETY Barrier Certificates - Ensure safety (collision avoidance, boundary constraints)
     safe_velocities_si = si_barrier_cert(agent_velocities_si, x[:2]) # Barrier certificate application

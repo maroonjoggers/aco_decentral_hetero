@@ -52,13 +52,13 @@ class Controller:
             pheromone_colors = {
                 "Return Home": "r",
                 "To Food": "k",
-                "Avoidance": "o" 
+                "Avoidance": "m" 
             }
     
             xVals = [ph.location[0] for ph in self.environment.pheromones]
             yVals = [ph.location[1] for ph in self.environment.pheromones]
             colors = [pheromone_colors[ph.type] for ph in self.environment.pheromones]
-            strengths = [ph.strength for ph in self.environment.pheromones]
+            strengths = [min(1.0, ph.strength) for ph in self.environment.pheromones]
             self.ph_plot = self.environment.robotarium.axes.scatter(xVals, yVals, s=15, c=colors, alpha=strengths)
 
 

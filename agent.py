@@ -92,21 +92,26 @@ class Agent:
             pheromone_type = "Avoidance"
 
         if pheromone_type:
-            if USE_PHEROMONE_LAYING_OFFSET:
-                ph_x = self.pose[0] - np.sin(self.pose[2]) * PHEROMONE_LAYING_OFFSET
-                ph_y = self.pose[1] + np.cos(self.pose[2]) * PHEROMONE_LAYING_OFFSET
-                ph_location = [ph_x, ph_y]
+            if pheromone_type != "Avoidance":
+                if USE_PHEROMONE_LAYING_OFFSET:
+                    ph_x = self.pose[0] - np.sin(self.pose[2]) * PHEROMONE_LAYING_OFFSET
+                    ph_y = self.pose[1] + np.cos(self.pose[2]) * PHEROMONE_LAYING_OFFSET
+                    ph_location = [ph_x, ph_y]
+                else:
+                    ph_location = [self.pose[0], self.pose[1]]
             else:
-                ph_location = [self.pose[0], self.pose[1]]
-
+                ph_x = self.pose[0] #+ np.cos(self.pose[2]) * AVOID_PHEROMONE_LAYING_OFFSET
+                ph_y = self.pose[1] #+ np.sin(self.pose[2]) * AVOID_PHEROMONE_LAYING_OFFSET
+                ph_location = [ph_x, ph_y]
+            
             pheromone = environment.create_pheromone(
                 agent_id=self.id,
                 type=pheromone_type,
                 #location=self.pose[:2].copy(),
                 location=ph_location,
                 direction=angle_wrapping(np.pi+self.pose[2]),        #Reverse the direction  
-                strength=self.initial_pheromone_strength,
-                lifeTime=self.pheromone_lifetime
+                strength=self.initial_pheromone_strength * (2.0 if avoidance else 1.0), # Make avoidance pheromones stronger?
+                lifeTime=self.pheromone_lifetime * (0.5 if avoidance else 1.0) # Make avoidance pheromones decay faster?
             )
 
             # Add pheromone to agent's local pheromone map
@@ -274,13 +279,17 @@ class Agent:
 
         #Vectorized form of the pheromone
         pheromone_vector = pheromone.strength * np.array([np.cos(pheromone.direction), np.sin(pheromone.direction)])
-        pheromone_vector /= np.linalg.norm(pheromone_vector)
+        if np.linalg.norm(pheromone_vector) > 1e-6:
+            pheromone_vector /= np.linalg.norm(pheromone_vector)
 
-        #TODO FIXME
-        vectorFromAgentToPh = pheromone.location - self.pose[:2]
-        vectorFromAgentToPh *= PHEROMONE_PULL_FACTOR*pheromone.strength/np.linalg.norm(vectorFromAgentToPh) 
+        if pheromone.type != "Avoidance":
+            vectorFromAgentToPh = pheromone.location - self.pose[:2]
+            if np.linalg.norm(vectorFromAgentToPh) > 1e-6:
+                vectorFromAgentToPh *= PHEROMONE_PULL_FACTOR*pheromone.strength/np.linalg.norm(vectorFromAgentToPh) 
+            else:
+                vectorFromAgentToPh = np.array([0.0, 0.0])
 
-        pheromone_vector += vectorFromAgentToPh    
+            pheromone_vector += vectorFromAgentToPh    
 
         '''
         # --- Define how each pheromone type influences movement direction and strength ---

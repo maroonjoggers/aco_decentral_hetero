@@ -164,17 +164,22 @@ class Environment:
     def get_nearby_obstacles(self, agent_location, sensing_radius):
         """
         Check for obstacles within the agent's sensing radius.
-
-        Args:
-            agent_location (numpy.ndarray): Agent's location [x, y].
-            sensing_radius (float): Agent's sensing radius.
-
-        Returns:
-            bool: True if obstacles are nearby, False otherwise.
+        For now, checks if the agent's center is inside a rectangular obstacle.
+        More sophisticated checks (e.g., considering agent radius) can be added.
         """
-        # --- Obstacle detection logic using obstacle_locations (shapes and vertices) ---
-        # TODO: IMPLEMENTATION NEEDED - Placeholder for now
-        return False # Placeholder - Replace with actual obstacle detection
+        for obstacle in self.obstacle_locations:
+            if obstacle["shape"] == "rectangle":
+                center_x, center_y = obstacle["center"]
+                width = obstacle["width"]
+                height = obstacle["height"]
+                x_min = center_x - width / 2
+                x_max = center_x + width / 2
+                y_min = center_y - height / 2
+                y_max = center_y + height / 2
+
+                if x_min <= agent_location[0] <= x_max and y_min <= agent_location[1] <= y_max:
+                    return True
+        return False
 
 
     def get_nearby_hazards(self, agent_location, sensing_radius):
