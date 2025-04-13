@@ -182,7 +182,7 @@ while True:
     agent_velocities_si = controller.run_step(current_time) # TODO: This is where the largest chunk of our actual algorithm functionality lies
 
     # b.1) Apply NETWORK barriers for staying in communication
-    #agent_velocities_si = network_barriers(agent_velocities_si, x[:2], env)
+    agent_velocities_si = network_barriers(agent_velocities_si, x[:2], env)
 
     # b.2) Apply SAFETY Barrier Certificates - Ensure safety (collision avoidance, boundary constraints)
     safe_velocities_si = si_barrier_cert(agent_velocities_si, x[:2]) # Barrier certificate application
