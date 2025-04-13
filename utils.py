@@ -10,30 +10,31 @@ TIMESTEP_SIZE = 0.033 # Robotarium default timestep (seconds)
 HOME_LOCATION = [0.0, 0.0] # [x, y] - Example home location at the center
 FOOD_LOCATIONS = [[1.0, 0.5], [-1.0, -0.5], [-1.5,-0.8], [1.5,-0.8], [-1.5,0.8], [1.5,0.8]] # Example food locations - list of [x, y]
 OBSTACLE_LOCATIONS = [
-    {"shape": "rectangle", "center": [0.75, 0.5], "width": 0.2, "height": 0.3},
-    {"shape": "rectangle", "center": [-0.75, 0.75], "width": 0.25, "height": 0.15},
+    {"shape": "rectangle", "center": [0.70, 0.5], "width": 0.2, "height": 0.3},
+    {"shape": "rectangle", "center": [-0.75, 0.5], "width": 0.25, "height": 0.15},
     # Add more obstacles here as dictionaries with "shape", "center", "width", "height"
 ]
 HAZARD_LOCATIONS = [] # Define hazards as needed (shapes and vertices) - Example: Areas to avoid
 
 # Agent parameters
+AGENT_RADIUS = 0.05             #Used in obstacle detection
 
 # Experiment Ends when it hts this maxout time (seconds)
 MAX_TIME = 120
 
 # INITAL CONDITIONS
-INTER_AGENT_DIST = 0.25
+INTER_AGENT_DIST = 0.4         # Was 0.25 during the midpoint
 
-PH_LAYING_RATE = 0.8
+PH_LAYING_RATE = 1.0            # Was 0.8 during the midpoint (This is seconds between laying pheromones)
 
 #TWO LANE PATH FORMATION
 USE_PHEROMONE_LAYING_OFFSET = True
 PHEROMONE_LAYING_OFFSET = 0.05
 
-AVOID_PHEROMONE_LAYING_OFFSET = 0.15
+AVOID_PHEROMONE_LAYING_OFFSET = 0.01
 
 #PULL FACTOR
-PHEROMONE_PULL_FACTOR = 0.25             #Between 0 and 1, indicates strength that pheromones "pull" the bot into their location (in addition to following direction)
+PHEROMONE_PULL_FACTOR = 0.35             #Between 0 and 1, indicates strength that pheromones "pull" the bot into their location (in addition to following direction)
 
 RANDOM_REDIRECTION_RATE = 5.0
 RANDOM_REDIRECTION_LIMITS = [np.pi/4, 2*np.pi/3]
@@ -49,7 +50,7 @@ AGENT_TRAIT_PROFILES = {
         "sensing_radius": 0.2, # meters - Example values - ADJUST AS NEEDED
         "max_speed": 0.18, # m/s
         "initial_pheromone_strength": 1.0, # Initial pheromone strength for agents of this type
-        "communication_radius": 0.5, # meters
+        "communication_radius": 0.85, # meters
         "pheromone_lifetime": 150.0, # Decay rate per timestep
     },
     "Profile_Type_B": { # Example profile 2

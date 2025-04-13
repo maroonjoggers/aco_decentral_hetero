@@ -172,14 +172,21 @@ class Environment:
                 center_x, center_y = obstacle["center"]
                 width = obstacle["width"]
                 height = obstacle["height"]
-                x_min = center_x - width / 2
-                x_max = center_x + width / 2
-                y_min = center_y - height / 2
-                y_max = center_y + height / 2
+                x_min_obs = center_x - width / 2
+                x_max_obs = center_x + width / 2
+                y_min_obs = center_y - height / 2
+                y_max_obs = center_y + height / 2
 
-                if x_min <= agent_location[0] <= x_max and y_min <= agent_location[1] <= y_max:
-                    return True
-        return False
+                # Calculate the shortest distance between the agent's center and the obstacle's bounding box
+                distance_x = max(x_min_obs - agent_location[0], 0, agent_location[0] - x_max_obs)
+                distance_y = max(y_min_obs - agent_location[1], 0, agent_location[1] - y_max_obs)
+                distance = np.sqrt(distance_x**2 + distance_y**2)
+
+                # Check if the distance is less than agent_radius
+                if distance <= AGENT_RADIUS:
+                    obstacle_angle = np.arctan2(-distance_y, -distance_x)
+                    return True, obstacle_angle
+        return False, None
 
 
     def get_nearby_hazards(self, agent_location, sensing_radius):

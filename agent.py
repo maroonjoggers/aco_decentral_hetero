@@ -47,11 +47,11 @@ class Agent:
         """
         nearby_food = environment.get_nearby_food(self.pose[:2], self.sensing_radius) # Returns true if we see food
         nearby_home = environment.is_nearby_home(self.pose[:2], self.sensing_radius) # Returns true if we see the home
-        nearby_obstacles = environment.get_nearby_obstacles(self.pose[:2], self.sensing_radius) # TODO: NOT IMPLEMENTED. For now returns False
+        nearby_obstacles, obstacle_angle = environment.get_nearby_obstacles(self.pose[:2], self.sensing_radius) # TODO: NOT IMPLEMENTED. For now returns False
         nearby_hazards = environment.get_nearby_hazards(self.pose[:2], self.sensing_radius) # TODO: NOT IMPLEMENTED. For now returns False
 
         #TODO: What is the purpose of this here? It's not used and the function itself doesn't even make much sense. Probably get rid of it
-        nearby_pheromones = environment.get_nearby_pheromones(self.pose[:2], self.sensing_radius, self.pheromone_map) # TODO: CHECK THIS
+        #nearby_pheromones = environment.get_nearby_pheromones(self.pose[:2], self.sensing_radius, self.pheromone_map) # TODO: CHECK THIS
 
         # --- State Update Logic based on environment checks ---
         # TODO: Right now this translates to: If we sense our goal then we immeditaly attain it. Might be okay for now but may want to reconsider
@@ -68,10 +68,10 @@ class Agent:
         # This might involve setting avoidance pheromones or directly influencing velocity
         # # TODO: This won't run right now since both will be false
         if nearby_obstacles or nearby_hazards:
-            self.update_pheromone_map_own(environment=environment, avoidance=True) # Example: Lay avoidance pheromone
+            self.update_pheromone_map_own(environment=environment, avoidance=True, avoidance_angle=obstacle_angle) # Example: Lay avoidance pheromone
 
 
-    def update_pheromone_map_own(self, environment, avoidance=False):
+    def update_pheromone_map_own(self, environment, avoidance=False, avoidance_angle = None):
         """
         Lay down pheromones based on the agent's current state and decay existing pheromones in its map.
 
@@ -100,8 +100,8 @@ class Agent:
                 else:
                     ph_location = [self.pose[0], self.pose[1]]
             else:
-                ph_x = self.pose[0] #+ np.cos(self.pose[2]) * AVOID_PHEROMONE_LAYING_OFFSET
-                ph_y = self.pose[1] #+ np.sin(self.pose[2]) * AVOID_PHEROMONE_LAYING_OFFSET
+                ph_x = self.pose[0] + np.cos(avoidance_angle) * AVOID_PHEROMONE_LAYING_OFFSET
+                ph_y = self.pose[1] + np.sin(avoidance_angle) * AVOID_PHEROMONE_LAYING_OFFSET
                 ph_location = [ph_x, ph_y]
             
             pheromone = environment.create_pheromone(
