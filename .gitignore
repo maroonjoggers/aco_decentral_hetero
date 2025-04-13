@@ -3,5 +3,5 @@ rl/__pycache__/
 venv/
 .env
 logs/
-models/
+# models/
 plots/
