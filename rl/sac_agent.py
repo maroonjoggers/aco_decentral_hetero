@@ -3,14 +3,14 @@ from stable_baselines3 import SAC
 from .lambda_env import LambdaEnv
 
 class AgentSAC:
-    def __init__(self, agent_index, get_state_fn, apply_lambda_fn, compute_reward_fn, logger, training_interval=10):
+    def __init__(self, agent_index, get_state_fn, compute_reward_fn, logger, training_interval=10):
         self.agent_index = agent_index
         self.training_interval = training_interval
         self.training_step = 0
         self.logger = logger
         self.episode_reward = 0.0
 
-        self.env = LambdaEnv(get_state_fn, apply_lambda_fn, compute_reward_fn)
+        self.env = LambdaEnv(get_state_fn, compute_reward_fn)
         self.model = SAC("MlpPolicy", self.env, verbose=0)
 
         # Optional: load existing model

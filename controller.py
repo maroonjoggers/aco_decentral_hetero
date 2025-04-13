@@ -9,6 +9,8 @@ from rl.reward import compute_reward
 import csv
 import os
 
+from network_barriers import *
+
 class Controller:                                                       #TODO: IMPLEMENT ALL NECESSARY FUNCTIONS / ... FOR RL/QP
     def __init__(self, environment):
         """
@@ -46,11 +48,6 @@ class Controller:                                                       #TODO: I
             def get_state_fn(agent_index=i):
                 return get_state_for_agent(self.environment.agents[agent_index])
 
-            def apply_lambda_fn(lambda_value, agent_index=i):
-                control_input = qp_solver(..., lambda_value, get_state_for_agent(self.environment.agents[agent_index]), ...)
-                # apply_control_to_agent(agent_index, control_input)
-                return control_input
-
             def compute_reward_fn(lambda_value):
                 return compute_reward(self.environment.agents[i], self.environment, lambda_value)
 
@@ -58,7 +55,6 @@ class Controller:                                                       #TODO: I
             rl_agent = AgentSAC(
                 agent_index=i,
                 get_state_fn=get_state_fn,
-                apply_lambda_fn=apply_lambda_fn,
                 compute_reward_fn=compute_reward_fn,
                 logger=self.log_writers[i],
                 training_interval=10
@@ -125,19 +121,6 @@ class Controller:                                                       #TODO: I
         for i in range(len(self.environment.agents)):
             agent = self.environment.agents[i]
             velocity_input_si = agent.determine_velocity_inputs_aco(self.environment, current_time) # ACO velocity calculation    TODO See function
-
-            ############################## RL ##############################
-
-            # Use RL agent to select lambda value dynamically
-            lambda_value = self.rl_agents[i].select_lambda(current_time)
-
-            # Apply control input
-            control_input = qp_solver(velocity_input_si, lambda_value, get_state_for_agent(i), ...)
-            velocity_input_si = control_input
-            # apply_control_to_agent(i, control_input)
-
-            ############################## RL ##############################
-
             agent_velocities_si[:, i] = velocity_input_si # Store SI velocity for agent in the returned variable    TODO: CHECK THIS IS IN THE CORRECT FORM
             agent.velocity_vector = velocity_input_si
 
@@ -148,6 +131,8 @@ class Controller:                                                       #TODO: I
 
 
         return agent_velocities_si # Return all agents' velocities for Robotarium application in main.py
+    
+    
 
     ############################## RL ##############################
 

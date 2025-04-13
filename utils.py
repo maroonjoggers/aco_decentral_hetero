@@ -28,6 +28,8 @@ HEADING_STD = np.pi/6
 
 PLOTTING = True
 
+WITH_LAMBDA = True
+
 # --- Heterogeneous Agent Trait Profiles ---
 # Define different trait profiles for agents - easily extendable and modifiable
 AGENT_TRAIT_PROFILES = {

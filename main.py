@@ -9,7 +9,7 @@ import time
 from utils import * # Import configuration parameters and agent trait profiles
 from environment import Environment
 from controller import Controller
-from network_barriers import network_barriers
+from network_barriers import *
 from rl.plot_lambda import plot_all_agents
 
 
@@ -170,10 +170,20 @@ while True:
     env.updatePoses(x)
 
     # a) Run Controller Step - Decentralized ACO velocity calculation
-    agent_velocities_si = controller.run_step(current_time) # TODO: This is where the largest chunk of our actual algorithm functionality lies
+    agent_velocities_si_nominal = controller.run_step(x, current_time) # TODO: This is where the largest chunk of our actual algorithm functionality lies
 
-    # b.1) Apply NETWORK barriers for staying in communication
-    agent_velocities_si = network_barriers(agent_velocities_si, x[:2], env)
+    # b.1) Apply NETWORK barriers for staying in communication ............
+    if not WITH_LAMBDA:
+        agent_velocities_si = network_barriers(agent_velocities_si_nominal, x[:2], env)
+    else:
+        lambda_values = np.array([
+            controller.rl_agents[i].select_lambda(current_time)
+            for i in range(NUM_AGENTS)
+        ])
+
+        agent_velocities_si = network_barriers_with_lambda(agent_velocities_si_nominal, x[:2], env, lambda_values)
+
+
 
     # b.2) Apply SAFETY Barrier Certificates - Ensure safety (collision avoidance, boundary constraints)
     safe_velocities_si = si_barrier_cert(agent_velocities_si, x[:2]) # Barrier certificate application

@@ -7,11 +7,10 @@ class LambdaEnv(gym.Env):
     Lambda is the heterogeneous weight to be used in the connectivity vs. exploration QP: min (lambda * ConnectivityCost + (1-lambda) * ExplorationCost )
     The action is continuous: the lambda value [0, 1].
     """
-    def __init__(self, get_state_fn, apply_lambda_fn, compute_reward_fn):
+    def __init__(self, get_state_fn, compute_reward_fn):
         super(LambdaEnv, self).__init__()
 
         self.get_state_fn = get_state_fn
-        self.apply_lambda_fn = apply_lambda_fn
         self.compute_reward_fn = compute_reward_fn
 
         # Dynamically determine state dimension
@@ -40,9 +39,6 @@ class LambdaEnv(gym.Env):
 
     def step(self, action):
         lambda_value = float(action[0])  # Convert action to scalar
-
-        # Apply lambda to QP solver and execute control
-        self.apply_lambda_fn(lambda_value)
 
         # Update state and compute reward
         next_state = self.get_state_fn()
