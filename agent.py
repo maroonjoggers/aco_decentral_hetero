@@ -7,7 +7,8 @@ from utils import *
 import random
 
 class Agent:
-    def __init__(self, agent_id, initial_pose, traits):
+    def __init__(
+        self, agent_id, initial_pose, traits):
         """
         Initialize an Agent.
 
@@ -335,7 +336,3 @@ class Agent:
             numpy.ndarray: The pose [x, y, theta].
         """
         return self.pose
-    
-    def get_state_vector(self):
-        pass
-        #TODO

@@ -167,10 +167,10 @@ while True:
     # need to get states and apply them
     x = r.get_poses()
 
-    env.updatePoses(x)
+    env.update_poses(x)
 
     # a) Run Controller Step - Decentralized ACO velocity calculation
-    agent_velocities_si_nominal = controller.run_step(x, current_time) # TODO: This is where the largest chunk of our actual algorithm functionality lies
+    agent_velocities_si_nominal = controller.run_step(current_time) # TODO: This is where the largest chunk of our actual algorithm functionality lies
 
     # b.1) Apply NETWORK barriers for staying in communication ............
     if not WITH_LAMBDA:
@@ -187,6 +187,8 @@ while True:
 
     # b.2) Apply SAFETY Barrier Certificates - Ensure safety (collision avoidance, boundary constraints)
     safe_velocities_si = si_barrier_cert(agent_velocities_si, x[:2]) # Barrier certificate application
+
+    env.update_velocities(safe_velocities_si)
 
     # c) Convert SI velocities to Unicycle Velocities (Robotarium-compatible)
     agent_velocities_uni = si_to_uni_dyn(safe_velocities_si, x) # SI to Uni velocity transformation

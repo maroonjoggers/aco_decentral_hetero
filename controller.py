@@ -46,10 +46,11 @@ class Controller:                                                       #TODO: I
 
             # Define agent-specific functions
             def get_state_fn(agent_index=i):
-                return self.environment.agents[agent_index].get_state_vector()
+                agent = self.environment.agents[agent_index]
+                return self.environment.get_state_vector(agent)
 
             def compute_reward_fn(state, lambda_value):
-                return compute_reward(self.environment.agents[i], self.environment, lambda_value)
+                return compute_reward(state, lambda_value)
 
             # Initialize RL agent
             rl_agent = AgentSAC(
@@ -122,7 +123,7 @@ class Controller:                                                       #TODO: I
             agent = self.environment.agents[i]
             velocity_input_si = agent.determine_velocity_inputs_aco(self.environment, current_time) # ACO velocity calculation    TODO See function
             agent_velocities_si[:, i] = velocity_input_si # Store SI velocity for agent in the returned variable    TODO: CHECK THIS IS IN THE CORRECT FORM
-            agent.velocity_vector = velocity_input_si
+            # agent.velocity_vector = velocity_input_si
 
 
         # 5. Age Update - Increment agent age at each step
