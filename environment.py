@@ -58,14 +58,23 @@ class Environment:
                 agent_count += 1
 
 
-    def updatePoses(self, agent_Pos_array):
+    def update_poses(self, agent_pos_array):
         '''
         Cycle through the agents based on their ID number and tell them what their new pose is
         This info comes directly from the robotarium
         '''
 
         for idx, agent in enumerate(self.agents):
-            agent.pose = agent_Pos_array[:, idx]
+            agent.pose = agent_pos_array[:, idx]
+
+    def update_velocities(self, agent_vel_array):
+        '''
+        Cycle through the agents based on their ID number and tell them what their new pose is
+        This info comes directly from the robotarium
+        '''
+
+        for idx, agent in enumerate(self.agents):
+            agent.velocity_vector = agent_vel_array[:, idx]
 
 
 
@@ -320,6 +329,56 @@ class Environment:
             list: List of Agent objects.
         """
         return self.agents
+    
+    def get_num_neighbors(self, agent):
+        """
+        Compute the number of neighboring agents within the communication radius.
+
+        Returns:
+            int: Number of neighbors
+        """
+        neighbors = self.get_agents_within_communication_radius(agent, agent.communication_radius)
+        return len(neighbors)
+    
+        
+    def get_state_vector(self, agent):
+        """
+        Decentralized state vector for the agent (7-dim) (normalized)
+        - Local agent density (neighbors within communication radius)
+        - Agent's own pose (x, y)
+        - Agent's velocity (vx, vy)
+        - Foraging/returning state (binary)
+        - Found goals progress
+        """
+        state = []
+
+        # 1. Local agent density (number of neighbors within communication radius)
+        local_density = self.get_num_neighbors(agent)
+        max_neighbors = NUM_AGENTS - 1 # for normalization
+        state.append(local_density / max_neighbors if max_neighbors > 0 else 0.0)
+
+         # 2. Agent's own pose (x, y)
+        x_min, x_max, y_min, y_max = ROBOTARIUM_BOUNDARIES
+        norm_x = 2 * (agent.pose[0] - x_min) / (x_max - x_min) - 1
+        norm_y = 2 * (agent.pose[1] - y_min) / (y_max - y_min) - 1
+        state.extend([norm_x, norm_y])
+
+        # 3. Agent's velocity (vx, vy)
+        norm_vx = agent.velocity_vector[0] / agent.max_speed
+        norm_vy = agent.velocity_vector[1] / agent.max_speed
+        state.extend([norm_vx, norm_vy])
+
+        # 4. Foraging / returning state (binary)
+        is_returning = 1 if agent.state == "Returning" else 0
+        state.append(is_returning)
+
+        # 5. Found goals progress
+        progress_sigmoid = 1 / (1 + np.exp(-agent.found_goals_counter))
+        progress_norm = (progress_sigmoid - 0.5) * 2 # rescaled to [0,1]
+        progress_norm = np.clip(progress_norm, 0.0, 1.0)
+        state.append(progress_norm)
+
+        return np.array(state, dtype=np.float32)
 
 
 # --- Pheromone Class (Inner class within Environment or separate file pheromone.py - CHOOSE ONE) ---

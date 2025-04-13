@@ -3,7 +3,15 @@ import numpy as np
 from environment import *
 from agent import *
 
-class Controller:
+from stable_baselines3 import SAC
+from rl.sac_agent import AgentSAC
+from rl.reward import compute_reward
+import csv
+import os
+
+from network_barriers import *
+
+class Controller:                                                       #TODO: IMPLEMENT ALL NECESSARY FUNCTIONS / ... FOR RL/QP
     def __init__(self, environment):
         """
         Initialize the Controller.
@@ -15,6 +23,48 @@ class Controller:
         self.previous_time = 0.0
         self.ph_plot = None
 
+        num_agents = len(self.environment.agents)
+
+        ############################## RL ##############################
+
+        self.rl_agents = []  # SAC models wrapped
+        self.log_files = []
+        self.log_writers = []
+    
+
+        # Ensure directories exist
+        os.makedirs('logs', exist_ok=True)
+        os.makedirs('models', exist_ok=True)
+
+        for i in range(num_agents):
+            # Setup logger
+            log_file = open(f'logs/agent_{i}_log.csv', mode='w', newline='')
+            logger = csv.writer(log_file)
+            logger.writerow(['Timestep', 'Lambda', 'Reward'])
+
+            self.log_files.append(log_file)
+            self.log_writers.append(logger)
+
+            # Define agent-specific functions
+            def get_state_fn(agent_index=i):
+                agent = self.environment.agents[agent_index]
+                return self.environment.get_state_vector(agent)
+
+            def compute_reward_fn(state, lambda_value):
+                return compute_reward(state, lambda_value)
+
+            # Initialize RL agent
+            rl_agent = AgentSAC(
+                agent_index=i,
+                get_state_fn=get_state_fn,
+                compute_reward_fn=compute_reward_fn,
+                logger=self.log_writers[i],
+                training_interval=10
+            )
+
+            self.rl_agents.append(rl_agent)
+
+        ############################## RL ##############################
 
     def run_step(self, current_time):
         """
@@ -74,7 +124,7 @@ class Controller:
             agent = self.environment.agents[i]
             velocity_input_si = agent.determine_velocity_inputs_aco(self.environment, current_time) # ACO velocity calculation    TODO See function
             agent_velocities_si[:, i] = velocity_input_si # Store SI velocity for agent in the returned variable    TODO: CHECK THIS IS IN THE CORRECT FORM
-            agent.velocity_vector = velocity_input_si
+            # agent.velocity_vector = velocity_input_si
 
 
         # 5. Age Update - Increment agent age at each step
@@ -83,3 +133,17 @@ class Controller:
 
 
         return agent_velocities_si # Return all agents' velocities for Robotarium application in main.py
+    
+    
+
+    ############################## RL ##############################
+
+    def close(self):
+        """
+        Close log files and save models for all RL agents.
+        """
+        for i, rl_agent in enumerate(self.rl_agents):
+            rl_agent.save()
+            self.log_files[i].close()
+
+    ############################## RL ##############################
