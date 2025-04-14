@@ -192,7 +192,7 @@ class Environment:
                 distance = np.sqrt(distance_x**2 + distance_y**2)
 
                 # Check if the distance is less than agent_radius
-                if distance <= AGENT_RADIUS:
+                if distance <= sensing_radius:
                     obstacle_angle = np.arctan2(-distance_y, -distance_x)
                     return True, obstacle_angle
         return False, None

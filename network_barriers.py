@@ -209,7 +209,7 @@ def network_barriers_with_lambda(U, X, env, lambda_values):
         newU: New agent velocities (2xN), optimized
     '''
 
-    GAMMA = 200.0
+    GAMMA = 2000.0
 
     radii = utils.communication_radius_list()
 
