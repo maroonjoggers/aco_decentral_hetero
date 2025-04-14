@@ -18,9 +18,9 @@ class Agent:
             traits (dict): Dictionary of heterogeneous traits (sensing_radius, etc.).
         """
         self.id = agent_id
-        self.pose = initial_pose  # [x, y, theta]  #TODO: We don't need to feed it its OG position. We tell the robotarium where to start them off and their position should ALWAYS be read, not directly written
+        self.pose = initial_pose  # [x, y, theta]
         self.state = "Foraging"  # Initial state
-        self.pheromone_map = [] # List of pheromone objects perceived by this agent
+        self.pheromone_map = {}  # Dictionary for O(1) lookups
         self.age = 0
 
         # Heterogeneous Traits - loaded from traits dictionary
@@ -28,25 +28,20 @@ class Agent:
         self.max_speed = traits.get('max_speed')
         self.initial_pheromone_strength = traits.get('initial_pheromone_strength')
         self.communication_radius = traits.get('communication_radius')
-        self.pheromone_lifetime = traits.get('pheromone_lifetime') # New trait
+        self.pheromone_lifetime = traits.get('pheromone_lifetime')
         self.random_direction_change_timer = 0
 
         self.velocity_vector = [0, 0]
-
         self.found_goals_counter = 0
 
-        # self.motion_update_interval = np.random.randint(5, 20)  # Update motion every 5-20 steps
-        # self.motion_update_counter = 0  # Counter to track updates
-        # self.current_velocity = np.array([0.0, 0.0])  # Stores last computed velocity
-
+        # Pre-allocate vectors for reuse
+        self._temp_vector = np.zeros(2)
+        self._direction_vector = np.zeros(2)
 
     def check_environment(self, environment):
         """
-        Check for food, home, obstacles, and hazards in the environment within the agent's sensing radius.
-        Update agent's state based on environmental conditions.
-
-        Args:
-            environment (Environment): The environment object.
+        Check the environment for obstacles, hazards, and food/goal.
+        Updates agent state and pheromone map accordingly.
         """
         nearby_food = environment.get_nearby_food(self.pose[:2], self.sensing_radius) # Returns true if we see food
         nearby_home = environment.is_nearby_home(self.pose[:2], self.sensing_radius) # Returns true if we see the home
@@ -72,8 +67,8 @@ class Agent:
         # --- Handle obstacle and hazard avoidance based on nearby_obstacles and nearby_hazards ---
         # This might involve setting avoidance pheromones or directly influencing velocity
         # # TODO: This won't run right now since both will be false
-        if nearby_obstacles or nearby_hazards:
-            self.update_pheromone_map_own(environment=environment, avoidance=True, avoidance_angle=obstacle_angle) # Example: Lay avoidance pheromone
+        # if nearby_obstacles or nearby_hazards:
+        #     self.update_pheromone_map_own(environment=environment, avoidance=True, avoidance_angle=obstacle_angle) # Example: Lay avoidance pheromone
 
 
     def update_pheromone_map_own(self, environment, avoidance=False, avoidance_angle = None):
@@ -86,7 +81,6 @@ class Agent:
         """
         # --- Pheromone Laying Logic ---
         pheromone_type = None
-
 
         if self.state == "Foraging":
             pheromone_type = "Return Home"
@@ -112,7 +106,6 @@ class Agent:
             pheromone = environment.create_pheromone(
                 agent_id=self.id,
                 type=pheromone_type,
-                #location=self.pose[:2].copy(),
                 location=ph_location,
                 direction=angle_wrapping(np.pi+self.pose[2]),        #Reverse the direction  
                 strength=self.initial_pheromone_strength * (2.0 if avoidance else 1.0), # Make avoidance pheromones stronger?
@@ -120,22 +113,22 @@ class Agent:
             )
 
             # Add pheromone to agent's local pheromone map
-            self.pheromone_map.append(pheromone)  
+            self.pheromone_map[pheromone.id] = pheromone
             print(f"Agent {self.id} added {pheromone_type} pheromone to local map at {self.pose[:2]}")
 
-            # Optionally, still add to the environment
+            # Add to the environment
             environment.add_pheromone(pheromone)  
 
         # --- Pheromone Decay for the agent's local pheromone map ---
-        updated_pheromone_map = []
-        for p in self.pheromone_map:
+        updated_pheromone_map = {}
+        for p_id, p in self.pheromone_map.items():
             p.decay()  
             if p.strength > 0:
-                updated_pheromone_map.append(p)
+                updated_pheromone_map[p_id] = p
             else:                                           #If the pheromone died, remove it from the global list
-                for ph in environment.pheromones:
-                    if ph.id == p.id:
-                        environment.pheromones.remove(ph)
+                if p_id in environment.pheromone_dict:
+                    del environment.pheromone_dict[p_id]
+                    environment.needs_tree_update = True
 
         self.pheromone_map = updated_pheromone_map
 
@@ -150,15 +143,9 @@ class Agent:
             neighbors (list): List of neighboring Agent objects within communication radius.
         """
         for neighbor in neighbors:
-            shared_pheromones = neighbor.pheromone_map     
-            for p_shared in shared_pheromones:
-                is_new_pheromone = True
-                for p_local in self.pheromone_map:
-                    if p_shared.id == p_local.id: # Check if already in local map by ID
-                        is_new_pheromone = False
-                        break
-                if is_new_pheromone:
-                    self.pheromone_map.append(copy.copy(p_shared)) # Add new pheromone to local map
+            for p_id, p_shared in neighbor.pheromone_map.items():
+                if p_id not in self.pheromone_map:
+                    self.pheromone_map[p_id] = copy.copy(p_shared)
 
 
 
@@ -260,20 +247,21 @@ class Agent:
         relevant_pheromones = []
         if self.state == "Foraging":
             # Consider "To Food" and "Avoidance" pheromones
-            for p in self.pheromone_map:
+            for p in self.pheromone_map.values():
                 if p.type in ["To Food", "Avoidance"]: # Consider Return Home to find general direction back
                     relevant_pheromones.append(p)
         elif self.state == "Returning":
             # Consider "Return Home" and "Avoidance" pheromones
-            for p in self.pheromone_map:
+            for p in self.pheromone_map.values():
                 if p.type in ["Return Home", "Avoidance"]:
                     relevant_pheromones.append(p)
         return relevant_pheromones
 
 
-    def calculate_pheromone_vector(self, pheromone):                    ######### VECTOR MAGNITUDES ISSUE ? FIXME
+    def calculate_pheromone_vector(self, pheromone):
         """
         Calculate the vector contribution of a single pheromone to the agent's movement.
+        Uses pre-allocated vectors for efficiency.
 
         Args:
             pheromone (Pheromone): The pheromone object.
@@ -281,48 +269,29 @@ class Agent:
         Returns:
             numpy.ndarray: 2D vector representing pheromone influence [vx, vy].
         """
-
-        #Vectorized form of the pheromone
-        pheromone_vector = pheromone.strength * np.array([np.cos(pheromone.direction), np.sin(pheromone.direction)])
-        if np.linalg.norm(pheromone_vector) > 1e-6:
-            pheromone_vector /= np.linalg.norm(pheromone_vector)
-
+        # Calculate direction components
+        self._temp_vector[0] = np.cos(pheromone.direction)
+        self._temp_vector[1] = np.sin(pheromone.direction)
+        
+        # Scale by strength
+        self._temp_vector *= pheromone.strength
+        
         if pheromone.type != "Avoidance":
-            vectorFromAgentToPh = pheromone.location - self.pose[:2]
-            if np.linalg.norm(vectorFromAgentToPh) > 1e-6:
-                vectorFromAgentToPh *= PHEROMONE_PULL_FACTOR*pheromone.strength/np.linalg.norm(vectorFromAgentToPh) 
+            # Calculate vector from agent to pheromone
+            self._direction_vector[0] = pheromone.location[0] - self.pose[0]
+            self._direction_vector[1] = pheromone.location[1] - self.pose[1]
+            
+            # Normalize and scale if non-zero
+            norm = np.linalg.norm(self._direction_vector)
+            if norm > 1e-6:
+                self._direction_vector *= (PHEROMONE_PULL_FACTOR * pheromone.strength / norm)
             else:
-                vectorFromAgentToPh = np.array([0.0, 0.0])
-
-            pheromone_vector += vectorFromAgentToPh    
-
-        '''
-        # --- Define how each pheromone type influences movement direction and strength ---
-        pheromone_vector = np.array([0.0, 0.0])
-        if pheromone.type == "To Food":
-            # Vector towards food source (pheromone location) - EXAMPLE IMPLEMENTATION -  ADJUST LOGIC
-            direction_vector = pheromone.location - self.pose[:2]
-            magnitude = pheromone.strength # Strength of pheromone influence
-            if np.linalg.norm(direction_vector) > 0:
-                pheromone_vector = magnitude * (direction_vector / np.linalg.norm(direction_vector)) # Normalize direction
-
-        elif pheromone.type == "Return Home":
-            # Vector towards home - EXAMPLE IMPLEMENTATION - ADJUST LOGIC
-            direction_vector = environment.home_location - self.pose[:2] # Assuming home_location is accessible from Agent or passed
-            magnitude = pheromone.strength
-            if np.linalg.norm(direction_vector) > 0:
-                pheromone_vector = magnitude * (direction_vector / np.linalg.norm(direction_vector))
-
-        elif pheromone.type == "Avoidance":
-            # Vector away from avoidance pheromone - EXAMPLE IMPLEMENTATION - ADJUST LOGIC
-            direction_vector = self.pose[:2] - pheromone.location # Flee direction
-            magnitude = pheromone.strength
-            if np.linalg.norm(direction_vector) > 0:
-                pheromone_vector = magnitude * (direction_vector / np.linalg.norm(direction_vector))
-        '''
-
-
-        return pheromone_vector
+                self._direction_vector.fill(0)
+            
+            # Add the direction vector to the pheromone vector
+            self._temp_vector += self._direction_vector
+        
+        return self._temp_vector.copy()  # Return a copy to prevent modification of the cached vector
 
 
     def update_age(self):

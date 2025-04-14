@@ -24,7 +24,7 @@ def main():
     # Parameters from utils.py
     initalConditions = determineInitalConditions()
     r = robotarium.Robotarium(number_of_robots=NUM_AGENTS, show_figure=PLOTTING, initial_conditions=initalConditions, sim_in_real_time=True)
-
+    r.time_step = 0.05
     #TODO: Notes on above line initialization
     # 1. See notes on NUM_AGENTS in utily.py --> Needs to be max total possible alive at any one point
     # 2. Initial Conditions should not be zero, they should be the spawn point. It would probably be better to make a simple formation because they can't all literally be in the same spot physically at one time
@@ -128,10 +128,20 @@ def main():
 
     start_time = time.time()
     last_time = time.time()  # Track the time of the last iteration
+    last_print_time = time.time()  # Track when we last printed stats
+    iteration_times = []  # Store iteration times for averaging
     while True:
         # Calculate time since last iteration
         current_iteration_time = time.time() - last_time
-        print(f"Loop iteration time: {current_iteration_time:.6f} seconds")
+        iteration_times.append(current_iteration_time)
+        
+        # Print average every second
+        if time.time() - last_print_time >= 1.0:
+            avg_iteration_time = sum(iteration_times) / len(iteration_times)
+            print(f"Average loop iteration time: {avg_iteration_time:.6f} seconds")
+            iteration_times = []  # Reset the list
+            last_print_time = time.time()
+            
         last_time = time.time()  # Update last_time for next iteration
 
         current_time = time.time() - start_time  # Total elapsed time
@@ -139,6 +149,7 @@ def main():
         # need to get states and apply them
         x = r.get_poses()
         env.update_poses(x)
+        env.needs_agent_tree_update = True  # Mark agent tree for update
 
         # a) Run Controller Step - Decentralized ACO velocity calculation
         agent_velocities_si_nominal = controller.run_step(current_time) # TODO: This is where the largest chunk of our actual algorithm functionality lies

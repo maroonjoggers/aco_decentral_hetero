@@ -1,5 +1,6 @@
 # environment.py
 import numpy as np
+from scipy.spatial import cKDTree
 from agent import Agent
 from utils import *
 
@@ -19,17 +20,45 @@ class Environment:
         """
         self.boundaries = boundary_points # [x_min, x_max, y_min, y_max]
         self.home_location = np.array(home_location) # [x, y]
-        self.food_locations = [np.array(loc) for loc in food_locations] # List of [x, y]    #TODO: Why is this different than obstacles and hazards? If its passed as a list then why are we parsing the list just to build a new one?
+        self.food_locations = [np.array(loc) for loc in food_locations] # List of [x, y]
         self.obstacle_locations = obstacle_locations # List of obstacle definitions
         self.hazard_locations = hazard_locations # List of hazard definitions
-        self.pheromones = [] # List to store pheromone objects in the environment
+        self.pheromone_dict = {}  # id -> pheromone object
+        self.pheromone_tree = None  # KD-tree for spatial queries
+        self.needs_tree_update = False
         self.agents = [] # List to store Agent objects
         self.agent_traits_profiles = agent_traits_profiles # Store trait profiles
         self.tasks_completed = 0
         self.robotarium = robotarium
+        self.agent_tree = None
+        self.needs_agent_tree_update = True  # Initialize as True to build tree after agents are created
 
         self.initialize_agents(num_agents, agent_traits_profiles, agent_ICs)
+        self.update_agent_tree()  # Build initial agent tree
 
+    def update_spatial_index(self):
+        """Update the KD-tree for pheromone spatial queries"""
+        if not self.needs_tree_update:
+            return
+        
+        locations = np.array([p.location for p in self.pheromone_dict.values()])
+        if len(locations) > 0:
+            self.pheromone_tree = cKDTree(locations)
+        else:
+            self.pheromone_tree = None
+        self.needs_tree_update = False
+
+    def update_agent_tree(self):
+        """Update the KD-tree for agent spatial queries"""
+        if not self.needs_agent_tree_update:
+            return
+        
+        if len(self.agents) > 0:
+            positions = np.array([agent.pose[:2] for agent in self.agents])
+            self.agent_tree = cKDTree(positions)
+        else:
+            self.agent_tree = None
+        self.needs_agent_tree_update = False
 
     def initialize_agents(self, num_agents, agent_traits_profiles, agent_ICs):
         """
@@ -115,24 +144,86 @@ class Environment:
 
     def add_pheromone(self, pheromone):
         """
-        Add a pheromone to the environment's pheromone list.
+        Add a pheromone to the environment's pheromone dictionary and mark tree for update.
 
         Args:
             pheromone (Pheromone): The Pheromone object to add.
         """
-        self.pheromones.append(pheromone)
-
+        self.pheromone_dict[pheromone.id] = pheromone
+        self.needs_tree_update = True
 
     def decay_pheromones(self):
         """
         Decay all pheromones in the environment and remove those with strength <= 0.
+        Uses batch processing for efficiency.
         """
-        updated_pheromones = []
-        for p in self.pheromones:
-            p.decay()
-            if p.strength > 0: # Keep pheromones with positive strength
-                updated_pheromones.append(p)
-        self.pheromones = updated_pheromones
+        dead_pheromones = []
+        for p_id, pheromone in self.pheromone_dict.items():
+            pheromone.decay()
+            if pheromone.strength <= 0:
+                dead_pheromones.append(p_id)
+        
+        # Batch remove dead pheromones
+        for p_id in dead_pheromones:
+            del self.pheromone_dict[p_id]
+        
+        if dead_pheromones:
+            self.needs_tree_update = True
+
+    def get_nearby_pheromones(self, agent_location, sensing_radius, agent_pheromone_map):
+        """
+        Get a list of pheromones from the environment that are within the agent's sensing radius
+        AND are not already in the agent's pheromone map.
+
+        Args:
+            agent_location (numpy.ndarray): Agent's location [x, y].
+            sensing_radius (float): Agent's sensing radius.
+            agent_pheromone_map (dict): The agent's current pheromone map.
+
+        Returns:
+            list: List of Pheromone objects from the environment that are nearby and new to the agent.
+        """
+        self.update_spatial_index()
+        if self.pheromone_tree is None:
+            return []
+            
+        nearby_indices = self.pheromone_tree.query_ball_point(
+            agent_location, sensing_radius
+        )
+        
+        # Filter known pheromones
+        known_ids = set(agent_pheromone_map.keys())
+        return [
+            self.pheromone_dict[idx] 
+            for idx in nearby_indices 
+            if idx not in known_ids
+        ]
+
+    def get_agents_within_communication_radius(self, agent, communication_radius):
+        """
+        Get a list of neighboring agents within the communication radius of a given agent.
+
+        Args:
+            agent (Agent): The agent to find neighbors for.
+            communication_radius (float): The communication radius.
+
+        Returns:
+            list: List of neighboring Agent objects.
+        """
+        self.update_agent_tree()
+        if self.agent_tree is None:
+            return []
+            
+        agent_pos = agent.pose[:2]
+        nearby_indices = self.agent_tree.query_ball_point(
+            agent_pos, communication_radius
+        )
+        
+        return [
+            self.agents[idx] 
+            for idx in nearby_indices 
+            if self.agents[idx].id != agent.id
+        ]
 
 
     def get_nearby_food(self, agent_location, sensing_radius):
@@ -212,56 +303,6 @@ class Environment:
         return False # Placeholder - Replace with actual hazard detection
 
 
-    def get_nearby_pheromones(self, agent_location, sensing_radius, agent_pheromone_map):
-        """
-        Get a list of pheromones from the environment that are within the agent's sensing radius AND are not already in the agent's pheromone map.
-        This prevents an agent from adding pheromones to its map multiple times from the environment.
-
-        Args:
-            agent_location (numpy.ndarray): Agent's location [x, y].
-            sensing_radius (float): Agent's sensing radius.
-            agent_pheromone_map (list): The agent's current pheromone map (list of Pheromone objects).
-
-        Returns:
-            list: List of Pheromone objects from the environment that are nearby and new to the agent.
-        """
-        nearby_pheromones = []
-        for pheromone in self.pheromones:
-            distance = np.linalg.norm(pheromone.location - agent_location) # Distance calculation
-            if distance <= sensing_radius:
-                is_known_pheromone = False
-                for p_local in agent_pheromone_map:
-                    if pheromone.id == p_local.id: # Check if already in agent's map by ID
-                        is_known_pheromone = True
-                        break
-                if not is_known_pheromone:
-                    nearby_pheromones.append(pheromone) # Add only new pheromones
-
-        # print(f"Agent at {agent_location} detected {len(nearby_pheromones)} pheromones")
-
-        return nearby_pheromones
-
-
-    def get_agents_within_communication_radius(self, agent, communication_radius):
-        """
-        Get a list of neighboring agents within the communication radius of a given agent.
-
-        Args:
-            agent (Agent): The agent to find neighbors for.
-            communication_radius (float): The communication radius.
-
-        Returns:
-            list: List of neighboring Agent objects.
-        """
-        neighbors = []
-        for other_agent in self.agents:
-            if other_agent.id != agent.id: # Exclude self
-                distance = np.linalg.norm(agent.pose[:2] - other_agent.pose[:2]) # Distance between agents (xy only)
-                if distance <= communication_radius:
-                    neighbors.append(other_agent)
-        return neighbors
-
-
     #UNUSED - DO NOT USE
     def update_agent_poses(self, agent_velocities):
         """
@@ -316,7 +357,7 @@ class Environment:
         Returns:
             list: List of Pheromone objects.
         """
-        return self.pheromones
+        return self.pheromone_dict.values()
 
 
     def get_agents(self):

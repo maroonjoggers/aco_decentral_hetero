@@ -10,8 +10,8 @@ TIMESTEP_SIZE = 0.033 # Robotarium default timestep (seconds)
 HOME_LOCATION = [0.0, 0.0] # [x, y] - Example home location at the center
 FOOD_LOCATIONS = [[1.0, 0.5], [-1.0, -0.5], [-1.5,-0.8], [1.5,-0.8], [-1.5,0.8], [1.5,0.8]] # Example food locations - list of [x, y]
 OBSTACLE_LOCATIONS = [
-    {"shape": "rectangle", "center": [0.70, 0.5], "width": 0.2, "height": 0.3},
-    {"shape": "rectangle", "center": [-0.75, 0.5], "width": 0.25, "height": 0.15},
+    # {"shape": "rectangle", "center": [0.70, 0.5], "width": 0.2, "height": 0.3},
+    # {"shape": "rectangle", "center": [-0.75, 0.5], "width": 0.25, "height": 0.15},
     # Add more obstacles here as dictionaries with "shape", "center", "width", "height"
 ]
 HAZARD_LOCATIONS = [] # Define hazards as needed (shapes and vertices) - Example: Areas to avoid
@@ -20,7 +20,7 @@ HAZARD_LOCATIONS = [] # Define hazards as needed (shapes and vertices) - Example
 AGENT_RADIUS = 0.05             #Used in obstacle detection
 
 # Experiment Ends when it hts this maxout time (seconds)
-MAX_TIME = 200
+MAX_TIME = 60
 
 # INITAL CONDITIONS
 INTER_AGENT_DIST = 0.3         # Was 0.25 during the midpoint
@@ -42,15 +42,15 @@ HEADING_STD = np.pi/6
 
 PLOTTING = True
 
-WITH_LAMBDA = True
-PLOT_LAMBDA = True
+WITH_LAMBDA = False
+PLOT_LAMBDA = False
 
 # --- Heterogeneous Agent Trait Profiles ---
 # Define different trait profiles for agents - easily extendable and modifiable
 AGENT_TRAIT_PROFILES = {
     "Profile_Type_A": { # Example profile 1
         "num_agents": 5, # Number of agents with this profile - can be overridden in main script
-        "sensing_radius": 0.12, # meters - Was 0.2 AT MIDPOINT
+        "sensing_radius": 0.2, # meters - Was 0.2 AT MIDPOINT
         "max_speed": 0.18, # m/s
         "initial_pheromone_strength": 1.0, # Initial pheromone strength for agents of this type
         "communication_radius": 0.4, # meters           #Was 0.2 AT MIDPOINT
@@ -81,7 +81,7 @@ def calculate_distance(point1, point2):
         point2 (numpy.ndarray): Second point [x, y].
 
     Returns:
-        float: Euclidean distance.
+        float: Euclidean distance.  
     """
     return np.linalg.norm(np.array(point1) - np.array(point2))
 
