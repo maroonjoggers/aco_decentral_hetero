@@ -44,6 +44,7 @@ PLOTTING = True
 
 WITH_LAMBDA = True
 PLOT_LAMBDA = True
+TRAINING_INTERVAL = 45 # steps, so every x*0.033 sec
 
 # --- Heterogeneous Agent Trait Profiles ---
 # Define different trait profiles for agents - easily extendable and modifiable

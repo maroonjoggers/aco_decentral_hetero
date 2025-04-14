@@ -198,10 +198,16 @@ while True:
     if not WITH_LAMBDA:
         agent_velocities_si = network_barriers(agent_velocities_si_nominal, x[:2], env)
     else:
-        lambda_values = np.array([
-            controller.rl_agents[i].select_lambda(current_time)
-            for i in range(NUM_AGENTS)
-        ])
+        if controller.current_step % controller.lambda_update_step_interval == 0:
+            lambda_values = np.array([
+                controller.rl_agents[i].select_lambda(current_time)
+                for i in range(NUM_AGENTS)
+            ])
+            controller.previous_lambda_values = lambda_values
+        else:
+            lambda_values = controller.previous_lambda_values
+
+        controller.current_step += 1
 
         agent_velocities_si = network_barriers_with_lambda(agent_velocities_si_nominal, x[:2], env, lambda_values)
 
