@@ -45,7 +45,7 @@ class Agent:
         """
         nearby_food = environment.get_nearby_food(self.pose[:2], self.sensing_radius) # Returns true if we see food
         nearby_home = environment.is_nearby_home(self.pose[:2], self.sensing_radius) # Returns true if we see the home
-        nearby_obstacles, obstacle_angle = environment.get_nearby_obstacles(self.pose[:2], self.sensing_radius) # TODO: NOT IMPLEMENTED. For now returns False
+        nearby_obstacles, obstacle_angle = environment.get_nearby_obstacles(self.pose[:2], self.sensing_radius)
         nearby_hazards = environment.get_nearby_hazards(self.pose[:2], self.sensing_radius) # TODO: NOT IMPLEMENTED. For now returns False
 
         #TODO: What is the purpose of this here? It's not used and the function itself doesn't even make much sense. Probably get rid of it
@@ -98,16 +98,18 @@ class Agent:
                     ph_location = [ph_x, ph_y]
                 else:
                     ph_location = [self.pose[0], self.pose[1]]
+                ph_direction = angle_wrapping(np.pi+self.pose[2])
             else:
-                ph_x = self.pose[0] + np.cos(avoidance_angle) * AVOID_PHEROMONE_LAYING_OFFSET
-                ph_y = self.pose[1] + np.sin(avoidance_angle) * AVOID_PHEROMONE_LAYING_OFFSET
+                ph_x = self.pose[0] - np.cos(avoidance_angle) * AVOID_PHEROMONE_LAYING_OFFSET
+                ph_y = self.pose[1] - np.sin(avoidance_angle) * AVOID_PHEROMONE_LAYING_OFFSET
                 ph_location = [ph_x, ph_y]
+                ph_direction = angle_wrapping(avoidance_angle+np.pi)
             
             pheromone = environment.create_pheromone(
                 agent_id=self.id,
                 type=pheromone_type,
                 location=ph_location,
-                direction=angle_wrapping(np.pi+self.pose[2]),        #Reverse the direction  
+                direction=ph_direction,        #Reverse the direction  
                 strength=self.initial_pheromone_strength * (2.0 if avoidance else 1.0), # Make avoidance pheromones stronger?
                 lifeTime=self.pheromone_lifetime * (0.5 if avoidance else 1.0) # Make avoidance pheromones decay faster?
             )

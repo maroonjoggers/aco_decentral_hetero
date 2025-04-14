@@ -13,7 +13,7 @@ def network_barriers(U, X, env):
     Outputs:
         newU: New agent velocity
     '''
-    GAMMA = 20.0
+    GAMMA = 200.0
 
     radii = utils.communication_radius_list()
 
@@ -143,10 +143,10 @@ def network_barriers_with_lambda_v0(U, X, env, lambda_values):
 
             A_row = np.zeros((total_vars,))
             # Populate A matrix entries
-            A_row[i * 2] = 2 * (X[0, i] - X[0, j])
-            A_row[i * 2 + 1] = 2 * (X[1, i] - X[1, j])
-            A_row[j * 2] = -2 * (X[0, i] - X[0, j])
-            A_row[j * 2 + 1] = -2 * (X[1, i] - X[1, j])
+            A_row[i * 3] = 2 * (X[0, i] - X[0, j])
+            A_row[i * 3 + 1] = 2 * (X[1, i] - X[1, j])
+            A_row[j * 3] = -2 * (X[0, i] - X[0, j])
+            A_row[j * 3 + 1] = -2 * (X[1, i] - X[1, j])
             # Note: auxiliary variable t has no contribution here
             A_list.append(A_row)
         else:
@@ -209,7 +209,7 @@ def network_barriers_with_lambda(U, X, env, lambda_values):
         newU: New agent velocities (2xN), optimized
     '''
 
-    GAMMA = 20.0
+    GAMMA = 2000.0
 
     radii = utils.communication_radius_list()
 
@@ -250,6 +250,7 @@ def network_barriers_with_lambda(U, X, env, lambda_values):
 
     q = matrix(q)
 
+    '''
     # === Build A and b (connectivity constraints) ===
     A_list = []
     b_list = []
@@ -267,7 +268,9 @@ def network_barriers_with_lambda(U, X, env, lambda_values):
 
         j = np.argmin(dists)
 
-        if dists[j] <= radii[i] and i not in returning_agents_indices:
+        ACTIVATION_THRESHOLD = radii[i] / 2
+
+        if dists[j] <= radii[i] and i not in returning_agents_indices and dists[j] >= ACTIVATION_THRESHOLD:
             h = radii[i] ** 2 - dists[j] ** 2
             b_list.append(-GAMMA * h ** 3)
 
@@ -287,6 +290,42 @@ def network_barriers_with_lambda(U, X, env, lambda_values):
         # No connectivity constraints, use empty matrix
         A = matrix(np.zeros((1, total_vars)))
         b = matrix(np.zeros(1))
+    '''
+
+    A = np.zeros((N, 2*N))
+    b = np.zeros(N)
+
+    for i, row in enumerate(A):           #Each row corresponds to an agent (and its closest neighbor)
+
+        #Find closest neighbor
+        #Define distances
+        pos_i = X[:,i].reshape(2,1)
+        diffs = X - pos_i
+        dists = np.linalg.norm(diffs, axis=0)
+        dists[i] = np.inf                       #ignore ourself
+
+        #ignore those which are returning
+        for idx in returning_agents_indices:
+            dists[idx] = np.inf
+
+        j = np.argmin(dists)
+
+        ACTIVATION_THRESHOLD = radii[i] / 2
+
+        if dists[j] <= radii[i] and i not in returning_agents_indices and dists[j] >= ACTIVATION_THRESHOLD:
+            h = radii[i]**2 - dists[j]**2                              #TODO: Not sure if radii list is actually how we'll access things
+            b[i] = -GAMMA*h**3
+            
+            #populate A matrix
+            A[i, i*2] = 2*(X[0,i]-X[0,j])
+            A[i, i*2 + 1] = 2*(X[1,i]-X[1,j])
+            A[i, j*2] = -2*(X[0,i]-X[0,j])
+            A[i, j*2 + 1] = -2*(X[1,i]-X[1,j])
+        else:
+            pass
+
+    A = matrix(A)
+    b = matrix(b)
 
     # === Solve QP ===
     solvers.options['show_progress'] = False  # Optional: silence solver output

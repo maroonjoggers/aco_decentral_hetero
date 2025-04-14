@@ -23,7 +23,7 @@ AGENT_RADIUS = 0.05             #Used in obstacle detection
 MAX_TIME = 60
 
 # INITAL CONDITIONS
-INTER_AGENT_DIST = 0.3         # Was 0.25 during the midpoint
+INTER_AGENT_DIST = 0.20         # Was 0.25 during the midpoint
 
 PH_LAYING_RATE = 1.0            # Was 0.8 during the midpoint (This is seconds between laying pheromones)
 
@@ -31,19 +31,21 @@ PH_LAYING_RATE = 1.0            # Was 0.8 during the midpoint (This is seconds b
 USE_PHEROMONE_LAYING_OFFSET = True
 PHEROMONE_LAYING_OFFSET = 0.05
 
-AVOID_PHEROMONE_LAYING_OFFSET = 0.01
+AVOID_PHEROMONE_LAYING_OFFSET = 0.125
 
 #PULL FACTOR
 PHEROMONE_PULL_FACTOR = 0.35             #Between 0 and 1, indicates strength that pheromones "pull" the bot into their location (in addition to following direction)
 
 RANDOM_REDIRECTION_RATE = 5.0
-RANDOM_REDIRECTION_LIMITS = [np.pi/4, 2*np.pi/3]
+#RANDOM_REDIRECTION_LIMITS = [np.pi/4, 2*np.pi/3]
+RANDOM_REDIRECTION_LIMITS = [0.0, 2*np.pi/3]
 HEADING_STD = np.pi/6
 
 PLOTTING = True
 
 WITH_LAMBDA = False
 PLOT_LAMBDA = False
+TRAINING_INTERVAL = 45 # steps, so every x*0.033 sec
 
 # --- Heterogeneous Agent Trait Profiles ---
 # Define different trait profiles for agents - easily extendable and modifiable
@@ -53,7 +55,7 @@ AGENT_TRAIT_PROFILES = {
         "sensing_radius": 0.2, # meters - Was 0.2 AT MIDPOINT
         "max_speed": 0.18, # m/s
         "initial_pheromone_strength": 1.0, # Initial pheromone strength for agents of this type
-        "communication_radius": 0.4, # meters           #Was 0.2 AT MIDPOINT
+        "communication_radius": 1.0, # meters           #Was 0.2 AT MIDPOINT
         "pheromone_lifetime": 150.0, # Decay rate per timestep
     },
     "Profile_Type_B": { # Example profile 2
@@ -149,6 +151,14 @@ def communication_radius_list():
         radii.extend([radius] * num)
 
     return radii
+
+
+# DO NOT REMOVE
+def is_bool_true(myBoolean):
+    if myBoolean is True:
+        return True
+    else:
+        return False
 
 
 

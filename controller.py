@@ -30,6 +30,10 @@ class Controller:                                                       #TODO: I
         self.rl_agents = []  # SAC models wrapped
         self.log_files = []
         self.log_writers = []
+
+        self.lambda_update_step_interval = TRAINING_INTERVAL  # Update every 30 steps
+        self.current_step = 0
+        self.previous_lambda_values = np.ones(NUM_AGENTS) * 0.5 # initial 50/50
     
 
         # Ensure directories exist
