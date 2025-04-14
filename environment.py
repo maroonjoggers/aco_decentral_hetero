@@ -256,7 +256,7 @@ class Environment:
             bool: True if home is nearby, False otherwise.
         """
         distance = np.linalg.norm(self.home_location - agent_location) # Distance to home
-        return distance <= sensing_radius*2
+        return distance <= sensing_radius*1.5
 
 
     def get_nearby_obstacles(self, agent_location, sensing_radius):
