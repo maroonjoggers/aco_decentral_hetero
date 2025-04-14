@@ -13,7 +13,7 @@ def network_barriers(U, X, env):
     Outputs:
         newU: New agent velocity
     '''
-    GAMMA = 20.0
+    GAMMA = 200.0
 
     radii = utils.communication_radius_list()
 

@@ -23,7 +23,7 @@ AGENT_RADIUS = 0.05             #Used in obstacle detection
 MAX_TIME = 120
 
 # INITAL CONDITIONS
-INTER_AGENT_DIST = 0.3         # Was 0.25 during the midpoint
+INTER_AGENT_DIST = 0.20         # Was 0.25 during the midpoint
 
 PH_LAYING_RATE = 1.0            # Was 0.8 during the midpoint (This is seconds between laying pheromones)
 
