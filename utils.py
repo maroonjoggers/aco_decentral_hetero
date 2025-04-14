@@ -10,8 +10,8 @@ TIMESTEP_SIZE = 0.033 # Robotarium default timestep (seconds)
 HOME_LOCATION = [0.0, 0.0] # [x, y] - Example home location at the center
 FOOD_LOCATIONS = [[1.0, 0.5], [-1.0, -0.5], [-1.5,-0.8], [1.5,-0.8], [-1.5,0.8], [1.5,0.8]] # Example food locations - list of [x, y]
 OBSTACLE_LOCATIONS = [
-    {"shape": "rectangle", "center": [0.70, 0.5], "width": 0.2, "height": 0.3},
-    {"shape": "rectangle", "center": [-0.75, 0.5], "width": 0.25, "height": 0.15},
+    # {"shape": "rectangle", "center": [0.70, 0.5], "width": 0.2, "height": 0.3},
+    # {"shape": "rectangle", "center": [-0.75, 0.5], "width": 0.25, "height": 0.15},
     # Add more obstacles here as dictionaries with "shape", "center", "width", "height"
 ]
 HAZARD_LOCATIONS = [] # Define hazards as needed (shapes and vertices) - Example: Areas to avoid
@@ -43,8 +43,8 @@ HEADING_STD = np.pi/6
 
 PLOTTING = True
 
-WITH_LAMBDA = False
-PLOT_LAMBDA = False
+WITH_LAMBDA = True
+PLOT_LAMBDA = True
 TRAINING_INTERVAL = 45 # steps, so every x*0.033 sec
 
 # --- Heterogeneous Agent Trait Profiles ---

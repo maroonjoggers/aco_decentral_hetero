@@ -2,6 +2,7 @@ import os
 from stable_baselines3 import SAC
 from .lambda_env import LambdaEnv
 from stable_baselines3.common.logger import configure
+import torch
 
 
 class AgentSAC:
@@ -13,7 +14,24 @@ class AgentSAC:
         self.episode_reward = 0.0
 
         self.env = LambdaEnv(get_state_fn, compute_reward_fn)
-        self.model = SAC("MlpPolicy", self.env, verbose=0, learning_rate=1e-4, buffer_size=10000000)
+        self.model = SAC(
+            "MlpPolicy",
+            self.env,
+            verbose=0,
+            learning_rate=1e-4,  # Smaller learning rate for smoother updates
+            buffer_size=100_000,  # Large buffer
+            batch_size=512,  # Larger batches for stability
+            tau=0.005,  # Target network smoothing coefficient
+            gamma=0.99,  # Discount factor
+            train_freq=1,
+            gradient_steps=1,
+            ent_coef="auto_0.05",  # << Lower entropy coefficient to reduce exploration noise
+            target_entropy=-0.1,   # << This controls how random the action is: lower = smoother!
+            use_sde=True,  # State-dependent exploration for smoother action noise
+            sde_sample_freq=4,  # How often to resample noise (larger = smoother)
+
+            device="cuda" if torch.cuda.is_available() else "cpu",  # Optional: for performance
+        )
         self.model._logger = configure()
 
         # Optional: load existing model
