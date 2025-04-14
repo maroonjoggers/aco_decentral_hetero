@@ -30,7 +30,7 @@ def read_agent_log(agent_index, log_folder='logs'):
     return timesteps, lambdas, rewards, cumulative_rewards
 
 def save_plot(fig, filename):
-    timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
+    timestamp = datetime.now().strftime('%Y%m%d_%H%M')
     folder = os.path.join('plots', timestamp)
     os.makedirs(folder, exist_ok=True)
     filepath = os.path.join(folder, f'{filename}.png')

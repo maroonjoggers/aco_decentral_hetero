@@ -20,7 +20,7 @@ HAZARD_LOCATIONS = [] # Define hazards as needed (shapes and vertices) - Example
 AGENT_RADIUS = 0.05             #Used in obstacle detection
 
 # Experiment Ends when it hts this maxout time (seconds)
-MAX_TIME = 60
+MAX_TIME = 600
 
 # INITAL CONDITIONS
 INTER_AGENT_DIST = 0.20         # Was 0.25 during the midpoint
@@ -41,7 +41,7 @@ RANDOM_REDIRECTION_RATE = 5.0
 RANDOM_REDIRECTION_LIMITS = [0.0, 2*np.pi/3]
 HEADING_STD = np.pi/6
 
-PLOTTING = True
+PLOTTING = False
 
 WITH_LAMBDA = True
 PLOT_LAMBDA = True

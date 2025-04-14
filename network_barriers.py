@@ -336,7 +336,7 @@ def network_barriers_with_lambda(U, X, env, lambda_values):
     newU = np.reshape(newInput, (2, -1), order="F")
 
     # Optional debug logging
-    print(f"[QP] Lambda: {lambda_values}")
-    print(f"[QP] Solution u*: {newU}")
+    # print(f"[QP] Lambda: {lambda_values}")
+    # print(f"[QP] Solution u*: {newU}")
 
     return newU

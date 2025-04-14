@@ -148,6 +148,7 @@ def main():
         if time.time() - last_print_time >= 1.0:
             avg_iteration_time = sum(iteration_times) / len(iteration_times)
             print(f"Average loop iteration time: {avg_iteration_time:.6f} seconds")
+            print(f"Elapsed time: {int(time.time() - start_time)} seconds.")
             iteration_times = []  # Reset the list
             last_print_time = time.time()
             

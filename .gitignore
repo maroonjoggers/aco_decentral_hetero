@@ -5,3 +5,4 @@ venv/
 logs/
 models/
 plots/
+*.txt
