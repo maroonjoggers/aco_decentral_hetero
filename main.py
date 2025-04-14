@@ -77,6 +77,15 @@ def main():
     yVals = [location[1] for location in FOOD_LOCATIONS]
     food_scatter = ax.scatter(xVals, yVals, s=100, c='g', zorder=1)
 
+    #Plot Obstacles
+    for obstacle in OBSTACLE_LOCATIONS:
+        if obstacle["shape"] == "rectangle":
+            center_x, center_y = obstacle["center"]
+            width = obstacle["width"]
+            height = obstacle["height"]
+            rect = patches.Rectangle((center_x - width / 2, center_y - height / 2), width, height, linewidth=1, edgecolor='r', facecolor='r', alpha=0.5)
+            r.axes.add_patch(rect)
+
     # Initialize scatter plots for visualization elements with appropriate zorder
     circles_scatter = ax.scatter([], [], s=2, c='y', zorder=2)
     edges_scatter = ax.scatter([], [], s=2, c='c', zorder=2)
