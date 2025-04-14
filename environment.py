@@ -1,7 +1,6 @@
 # environment.py
 import numpy as np
 from agent import Agent
-import uuid # For generating unique IDs for pheromones
 from utils import *
 
 class Environment:
@@ -111,8 +110,7 @@ class Environment:
         Returns:
             Pheromone: A new Pheromone object.
         """
-        pheromone_id = uuid.uuid4() # Generate unique ID
-        return Pheromone(pheromone_id, agent_id, type, location, direction, strength, lifeTime)
+        return Pheromone(agent_id, type, location, direction, strength, lifeTime)
 
 
     def add_pheromone(self, pheromone):
@@ -383,12 +381,15 @@ class Environment:
 
 # --- Pheromone Class (Inner class within Environment or separate file pheromone.py - CHOOSE ONE) ---
 class Pheromone:
-    def __init__(self, pheromone_id, agent_id, type, location, direction, strength, lifeTime):
+    # Add a class variable to track the next available ID
+    _next_id = 0
+
+    def __init__(self, agent_id, type, location, direction, strength, lifeTime):
         """
         Initialize a Pheromone object.
 
         Args:
-            pheromone_id (uuid.UUID): Unique ID for the pheromone.
+
             agent_id (int): ID of the agent that laid the pheromone.
             type (str): Type of pheromone ("Return Home", "To Food", "Avoidance").
             location (numpy.ndarray): Location [x, y] of the pheromone.
@@ -396,8 +397,9 @@ class Pheromone:
             strength (float): Current strength of the pheromone.
             decay_rate (float): Rate at which the pheromone decays per timestep.
         """
-        self.id = pheromone_id # Unique ID for pheromone identification
-        self.agent_id = agent_id # ID of agent that created it
+        self.id = Pheromone._next_id  # Use simple integer ID
+        Pheromone._next_id += 1
+        self.agent_id = agent_id
         self.type = type
         self.location = np.array(location) # [x, y]
         self.direction = direction # (global) Theta relative to the positive x-axis

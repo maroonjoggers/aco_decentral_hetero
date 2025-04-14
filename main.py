@@ -1,4 +1,9 @@
 # main.py
+import cProfile
+import pstats
+import io
+import matplotlib.pyplot as plt
+import matplotlib.animation as animation
 import numpy as np
 import rps.robotarium as robotarium
 from rps.utilities.transformations import *
@@ -14,224 +19,192 @@ from network_barriers import *
 from rl.plot_lambda import plot_all_agents
 
 import os
+def main():
+    # --- 1. Robotarium Initialization ---
+    # Parameters from utils.py
+    initalConditions = determineInitalConditions()
+    r = robotarium.Robotarium(number_of_robots=NUM_AGENTS, show_figure=PLOTTING, initial_conditions=initalConditions, sim_in_real_time=True)
+
+    #TODO: Notes on above line initialization
+    # 1. See notes on NUM_AGENTS in utily.py --> Needs to be max total possible alive at any one point
+    # 2. Initial Conditions should not be zero, they should be the spawn point. It would probably be better to make a simple formation because they can't all literally be in the same spot physically at one time
+
+    # Instantiate SI to Uni dynamics and SI position controller (for potential leader or centralized elements later)
+    si_to_uni_dyn = create_si_to_uni_dynamics() # or create_si_to_uni_dynamics_with_backwards_motion() if needed
+    si_position_controller = create_si_position_controller() # Example controller - not directly used in decentralized ACO
 
 
-def plot_home_and_food():
+    # --- 2. Barrier Certificates (for collision avoidance) ---
+    # Barrier certificate for single integrator dynamics - adjust parameters as needed
+    si_barrier_cert = create_single_integrator_barrier_certificate_with_boundary(barrier_gain=100, safety_radius=0.2) # Example parameters
 
-    #Plot home location
-    r.axes.scatter(HOME_LOCATION[0], HOME_LOCATION[1], s=100, c='b')
+    # --- 3. Initialize Environment and Controller ---
+    # Instantiate Environment with parameters from utils.py
+    env = Environment(
+        boundary_points=ROBOTARIUM_BOUNDARIES,
+        home_location=HOME_LOCATION,
+        food_locations=FOOD_LOCATIONS,
+        obstacle_locations=OBSTACLE_LOCATIONS,
+        hazard_locations=HAZARD_LOCATIONS,
+        num_agents=NUM_AGENTS,
+        agent_traits_profiles=AGENT_TRAIT_PROFILES,
+        agent_ICs = initalConditions,
+        robotarium = r
+    )
+    #TODO: The above line will run the self.initialize_agents() function in the init of the Environment() class, see that
 
-    #Plot food locations
+    # Instantiate Controller, passing the Environment object
+    controller = Controller(env)
+
+    """RL Episodes Tracking"""
+    episode_counter_path = "models/episode_counter.txt"
+    start_episode = 1
+    if os.path.exists(episode_counter_path):
+        with open(episode_counter_path, "r") as f:
+            start_episode = int(f.read()) + 1
+
+    print(f"=== Starting Episode {start_episode} ===")
+
+    # --- 4. Initialize Visualization ---
+    # Use Robotarium's figure and axes
+    ax = r.axes
+    ax.set_xlim(ROBOTARIUM_BOUNDARIES[0], ROBOTARIUM_BOUNDARIES[1])
+    ax.set_ylim(ROBOTARIUM_BOUNDARIES[2], ROBOTARIUM_BOUNDARIES[3])
+
+    # Plot home and food locations
+    home_scatter = ax.scatter(HOME_LOCATION[0], HOME_LOCATION[1], s=100, c='b', zorder=1)
     xVals = [location[0] for location in FOOD_LOCATIONS]
     yVals = [location[1] for location in FOOD_LOCATIONS]
-    r.axes.scatter(xVals, yVals, s=100, c='g')
+    food_scatter = ax.scatter(xVals, yVals, s=100, c='g', zorder=1)
 
-def plot_radii(environment, circles, num_points=30):
-    if circles:
-        for graph in circles:
-            graph.remove()
+    # Initialize scatter plots for visualization elements with appropriate zorder
+    circles_scatter = ax.scatter([], [], s=2, c='y', zorder=2)
+    edges_scatter = ax.scatter([], [], s=2, c='c', zorder=2)
+    arrow_scatter = ax.scatter([], [], s=2, c='m', zorder=2)
 
-    circles = []
+    def update_visualizations():
+        # Update circles for sensing radii
+        circles_data = []
+        for agent in env.agents:
+            center = agent.pose[:2]
+            radius = agent.sensing_radius
+            theta = np.linspace(0, 2*np.pi, 30)
+            x = center[0] + radius * np.cos(theta)
+            y = center[1] + radius * np.sin(theta)
+            circles_data.extend(list(zip(x, y)))
+        if circles_data:
+            circles_scatter.set_offsets(circles_data)
+        else:
+            circles_scatter.set_offsets(np.empty((0, 2)))
 
-    for agent in environment.agents:
-        center = agent.pose[:2]
-        radius = agent.sensing_radius
+        # Update edges for communication
+        edges_data = []
+        for agent in env.agents:
+            agent_pos = agent.pose[:2]
+            for neighbor in env.get_agents_within_communication_radius(agent, agent.communication_radius):
+                neighbor_pos = neighbor.pose[:2]
+                x = np.linspace(agent_pos[0], neighbor_pos[0], 20)
+                y = np.linspace(agent_pos[1], neighbor_pos[1], 20)
+                edges_data.extend(list(zip(x, y)))
+        if edges_data:
+            edges_scatter.set_offsets(edges_data)
+        else:
+            edges_scatter.set_offsets(np.empty((0, 2)))
 
-        theta = np.linspace(0, 2*np.pi, num_points)
+        # Update arrows for velocities
+        arrow_data = []
+        for agent in env.agents:
+            agent_pos = agent.pose[:2]
+            velocity_norm = np.linalg.norm(agent.velocity_vector)
+            if velocity_norm > 0:  # Only normalize if velocity is non-zero
+                velocity_vector = agent.velocity_vector / (4 * velocity_norm)
+                x = np.linspace(agent_pos[0], agent_pos[0] + velocity_vector[0], 10)
+                y = np.linspace(agent_pos[1], agent_pos[1] + velocity_vector[1], 10)
+                arrow_data.extend(list(zip(x, y)))
+        if arrow_data:
+            arrow_scatter.set_offsets(arrow_data)
+        else:
+            arrow_scatter.set_offsets(np.empty((0, 2)))
 
-        x = center[0] + radius * np.cos(theta)
-        y = center[1] + radius * np.sin(theta)
+    start_time = time.time()
+    last_time = time.time()  # Track the time of the last iteration
+    while True:
+        # Calculate time since last iteration
+        current_iteration_time = time.time() - last_time
+        print(f"Loop iteration time: {current_iteration_time:.6f} seconds")
+        last_time = time.time()  # Update last_time for next iteration
 
-        circles_new = r.axes.scatter(x, y, s=2, c='y')
-        circles.append(circles_new)
+        current_time = time.time() - start_time  # Total elapsed time
 
-    return circles
+        # need to get states and apply them
+        x = r.get_poses()
+        env.update_poses(x)
 
-def plot_edges(environment, edges, num_points=20):
-    # Remove existing edges
-    if edges:
-        for line in edges:
-            line.remove()
+        # a) Run Controller Step - Decentralized ACO velocity calculation
+        agent_velocities_si_nominal = controller.run_step(current_time) # TODO: This is where the largest chunk of our actual algorithm functionality lies
 
-    edges = []
+        # b.1) Apply NETWORK barriers for staying in communication ............
+        if not WITH_LAMBDA:
+            agent_velocities_si = network_barriers(agent_velocities_si_nominal, x[:2], env)
+        else:
+            lambda_values = np.array([
+                controller.rl_agents[i].select_lambda(current_time)
+                for i in range(NUM_AGENTS)
+            ])
+            agent_velocities_si = network_barriers_with_lambda(agent_velocities_si_nominal, x[:2], env, lambda_values)
 
-    for agent in environment.agents:
-        agent_pos = np.array(agent.pose[:2] )
-        
-        # Loop through neighbors within the communication radius
-        for neighbor in environment.get_agents_within_communication_radius(agent, agent.communication_radius):
-            neighbor_pos = np.array(neighbor.pose[:2] )
+        # b.2) Apply SAFETY Barrier Certificates - Ensure safety (collision avoidance, boundary constraints)
+        safe_velocities_si = si_barrier_cert(agent_velocities_si, x[:2]) # Barrier certificate application
 
-            x = np.linspace(agent_pos[0], neighbor_pos[0], num_points)
-            y = np.linspace(agent_pos[1], neighbor_pos[1], num_points)
-            
-            # Draw a line between the agent and its neighbor
-            edge_new = r.axes.scatter(x, y, s=2, c='c') 
-            
-            edges.append(edge_new)
+        env.update_velocities(safe_velocities_si)
 
-    return edges
+        # c) Convert SI velocities to Unicycle Velocities (Robotarium-compatible)
+        agent_velocities_uni = si_to_uni_dyn(safe_velocities_si, x) # SI to Uni velocity transformation
 
-def plot_arrow(environment, arrow, num_points=10):      #FIXME
-    if arrow:
-        for v in arrow:
-            v.remove()
+        # d) Set Velocities in Robotarium - Command robots to move
+        r.set_velocities(np.arange(NUM_AGENTS), agent_velocities_uni)
 
-    arrow = []
+        # Update visualizations
+        update_visualizations()
 
-    for agent in environment.agents:
-        agent_pos = np.array(agent.pose[:2])
-        velocity_vector = np.array(agent.velocity_vector) / (4*np.linalg.norm(agent.velocity_vector))
+        # e) Iterate Robotarium Simulation - Step the simulation forward
+        r.step()
 
-        x = np.linspace(agent_pos[0], velocity_vector[0], num_points)
-        y = np.linspace(agent_pos[1], velocity_vector[1], num_points)
-        
-        # Draw a line between the agent and its neighbor
-        arrow_new = r.axes.scatter(x, y, s=2, c='m') 
-        
-        arrow.append(arrow_new)
+        if current_time >= MAX_TIME:
+            break
 
-    return arrow
+    print("YAY! TASKS COMPLETED: " + str(env.tasks_completed))
 
-def plot_obstacles():
-    for obstacle in OBSTACLE_LOCATIONS:
-        if obstacle["shape"] == "rectangle":
-            center_x, center_y = obstacle["center"]
-            width = obstacle["width"]
-            height = obstacle["height"]
-            rect = patches.Rectangle((center_x - width / 2, center_y - height / 2), width, height, linewidth=1, edgecolor='r', facecolor='r', alpha=0.5)
-            r.axes.add_patch(rect)
+    # --- 6. Experiment End, RL plots, Saving, and Cleanup ---
+    print(f"=== Episode {start_episode} complete! ===")
+    os.makedirs("models", exist_ok=True)
+    with open(episode_counter_path, "w") as f:
+        f.write(str(start_episode))
 
-
-
-# --- 1. Robotarium Initialization ---
-# Parameters from utils.py
-initalConditions = determineInitalConditions()
-r = robotarium.Robotarium(number_of_robots=NUM_AGENTS, show_figure=True, initial_conditions=initalConditions, sim_in_real_time=True)
-
-#TODO: Notes on above line initialization
-# 1. See notes on NUM_AGENTS in utily.py --> Needs to be max total possible alive at any one point
-# 2. Initial Conditions should not be zero, they should be the spawn point. It would probably be better to make a simple formation because they can't all literally be in the same spot physically at one time
-
-# Instantiate SI to Uni dynamics and SI position controller (for potential leader or centralized elements later)
-si_to_uni_dyn = create_si_to_uni_dynamics() # or create_si_to_uni_dynamics_with_backwards_motion() if needed
-si_position_controller = create_si_position_controller() # Example controller - not directly used in decentralized ACO
-
-
-# --- 2. Barrier Certificates (for collision avoidance) ---
-# Barrier certificate for single integrator dynamics - adjust parameters as needed
-si_barrier_cert = create_single_integrator_barrier_certificate_with_boundary(barrier_gain=100, safety_radius=0.2) # Example parameters
-
-# --- 3. Initialize Environment and Controller ---
-# Instantiate Environment with parameters from utils.py
-env = Environment(
-    boundary_points=ROBOTARIUM_BOUNDARIES,
-    home_location=HOME_LOCATION,
-    food_locations=FOOD_LOCATIONS,
-    obstacle_locations=OBSTACLE_LOCATIONS,
-    hazard_locations=HAZARD_LOCATIONS,
-    num_agents=NUM_AGENTS,
-    agent_traits_profiles=AGENT_TRAIT_PROFILES,
-    agent_ICs = initalConditions,
-    robotarium = r
-)
-#TODO: The above line will run the self.initialize_agents() function in the init of the Environment() class, see that
-
-# Instantiate Controller, passing the Environment object
-controller = Controller(env)
-
-"""RL Episodes Tracking"""
-episode_counter_path = "models/episode_counter.txt"
-start_episode = 1
-if os.path.exists(episode_counter_path):
-    with open(episode_counter_path, "r") as f:
-        start_episode = int(f.read()) + 1
-
-print(f"=== Starting Episode {start_episode} ===")
+    controller.close()
+    if PLOT_LAMBDA: plot_all_agents(NUM_AGENTS)
+    r.call_at_scripts_end() # Robotarium cleanup and display message
 
 
-# --- 4. Set Initial Poses in Robotarium ---
-#TODO: This is all a mess. There is no such thing as r.set_poses. The below 2 lines can basically just go away. We don't need a separate function to get poses because that's part of the robotarium functionality
-# - What we may or may not need is a function to take what the robotarium gives us as the pose info and transform it for our uses
-
-#initial_poses = env.get_agent_poses() # Get initial poses from Environment (randomly initialized)
-#r.set_poses(initial_poses) # Set initial poses in Robotarium
-
-
-# --- 5. Run Simulation Loop ---
-#TODO: Do we want to run this based on a number of iterations? I think not
-# 1) We need to define the end state for our experiment. Could be multiple:
-#  a) Reached a certain time
-#  b) Reached a certain population min/max
-# 2) PS: each robotarium iteration is 0.033 seconds
-
-#TODO: Pose Handling
-# 1) The get_agent_poses(), as stated previously, doesn't make sense and can be replaced with robotarium's built in functionality
-# 2) The only issue we may face is matching which agent we are getting the robotarium's info about and corresponding that to our info about each agent. This shouldn't be too crazy
-
-plot_home_and_food()
-plot_obstacles()
-
-circles = None
-edges = None
-arrow = None
-
-start_time = time.time()
-while True:
-    current_time = time.time() - start_time
-    # print(current_time)
-
+if __name__ == "__main__":
+    # Create a profiler
+    pr = cProfile.Profile()
+    
+    # Start profiling
+    pr.enable()
+    
+    # Run the main function
+    main()
+    
+    # Stop profiling
+    pr.disable()
+    
+    # Save the profiling results to a file
     if PLOTTING:
-        circles = plot_radii(env, circles)
-        edges = plot_edges(env, edges)
-        # arrow = plot_arrow(env, arrow)      #FIXME
-
-    # need to get states and apply them
-    x = r.get_poses()
-
-    env.update_poses(x)
-
-    # a) Run Controller Step - Decentralized ACO velocity calculation
-    agent_velocities_si_nominal = controller.run_step(current_time) # TODO: This is where the largest chunk of our actual algorithm functionality lies
-
-    # b.1) Apply NETWORK barriers for staying in communication ............
-    if not WITH_LAMBDA:
-        agent_velocities_si = network_barriers(agent_velocities_si_nominal, x[:2], env)
+        text = "profiling_stats.txt"
     else:
-        lambda_values = np.array([
-            controller.rl_agents[i].select_lambda(current_time)
-            for i in range(NUM_AGENTS)
-        ])
-
-        agent_velocities_si = network_barriers_with_lambda(agent_velocities_si_nominal, x[:2], env, lambda_values)
-
-
-
-    # b.2) Apply SAFETY Barrier Certificates - Ensure safety (collision avoidance, boundary constraints)
-    safe_velocities_si = si_barrier_cert(agent_velocities_si, x[:2]) # Barrier certificate application
-
-    env.update_velocities(safe_velocities_si)
-
-    # c) Convert SI velocities to Unicycle Velocities (Robotarium-compatible)
-    agent_velocities_uni = si_to_uni_dyn(safe_velocities_si, x) # SI to Uni velocity transformation
-
-    # d) Set Velocities in Robotarium - Command robots to move
-    r.set_velocities(np.arange(NUM_AGENTS), agent_velocities_uni)
-
-    # e) Iterate Robotarium Simulation - Step the simulation forward
-    r.step()
-
-    if current_time >= MAX_TIME:
-        break
-
-print("YAY! TASKS COMPLETED: " + str(env.tasks_completed))
-
-# --- 6. Experiment End, RL plots, Saving, and Cleanup ---
-print(f"=== Episode {start_episode} complete! ===")
-os.makedirs("models", exist_ok=True)
-with open(episode_counter_path, "w") as f:
-    f.write(str(start_episode))
-
-controller.close()
-if PLOT_LAMBDA: plot_all_agents(NUM_AGENTS)
-r.call_at_scripts_end() # Robotarium cleanup and display message
+        text = "profiling_stats_no_figure.txt"
+    with open(text, 'w') as f:
+        ps = pstats.Stats(pr, stream=f)
+        ps.sort_stats('cumulative')
+        ps.print_stats()

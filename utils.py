@@ -20,7 +20,7 @@ HAZARD_LOCATIONS = [] # Define hazards as needed (shapes and vertices) - Example
 AGENT_RADIUS = 0.05             #Used in obstacle detection
 
 # Experiment Ends when it hts this maxout time (seconds)
-MAX_TIME = 120
+MAX_TIME = 200
 
 # INITAL CONDITIONS
 INTER_AGENT_DIST = 0.3         # Was 0.25 during the midpoint
