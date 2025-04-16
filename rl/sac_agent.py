@@ -3,6 +3,7 @@ from stable_baselines3 import SAC
 from .lambda_env import LambdaEnv
 from stable_baselines3.common.logger import configure
 import torch
+from utils import USE_CHECKPOINT
 
 
 class AgentSAC:
@@ -36,7 +37,7 @@ class AgentSAC:
 
         # Optional: load existing model
         model_path = f'models/agent_{agent_index}_lambda_sac.zip'
-        if os.path.exists(model_path):
+        if os.path.exists(model_path) and USE_CHECKPOINT:
             self.model = SAC.load(model_path, env=self.env)
             self.model._logger = configure()
 
