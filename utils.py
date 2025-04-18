@@ -46,7 +46,8 @@ PLOTTING = False
 WITH_LAMBDA = True
 PLOT_LAMBDA = True
 TRAINING_INTERVAL = 45 # steps, so every x*0.033 sec
-USE_CHECKPOINT = True
+TRAINING = True
+USE_CHECKPOINT = False
 
 # --- Heterogeneous Agent Trait Profiles ---
 # Define different trait profiles for agents - easily extendable and modifiable
@@ -56,16 +57,16 @@ AGENT_TRAIT_PROFILES = {
         "sensing_radius": 0.2, # meters - Was 0.2 AT MIDPOINT
         "max_speed": 0.18, # m/s
         "initial_pheromone_strength": 1.0, # Initial pheromone strength for agents of this type
-        "communication_radius": 1.0, # meters           #Was 0.2 AT MIDPOINT
+        "communication_radius": 0.8, # meters           #Was 0.2 AT MIDPOINT
         "pheromone_lifetime": 150.0, # Decay rate per timestep
     },
     "Profile_Type_B": { # Example profile 2
-        "num_agents": 0, # Number of agents with this profile - can be overridden
-        "sensing_radius": 0.25,
+        "num_agents": 3, # Number of agents with this profile - can be overridden
+        "sensing_radius": 0.28,
         "max_speed": 0.12,
         "initial_pheromone_strength": 0.85,
-        "communication_radius": 0.5,
-        "pheromone_lifetime": 20.0,
+        "communication_radius": 0.4,
+        "pheromone_lifetime": 80.0,
     },
     # Add more profiles as needed - easily extendable
 }

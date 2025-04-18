@@ -3,7 +3,7 @@ from stable_baselines3 import SAC
 from .lambda_env import LambdaEnv
 from stable_baselines3.common.logger import configure
 import torch
-from utils import USE_CHECKPOINT
+from utils import USE_CHECKPOINT, TRAINING
 
 
 class AgentSAC:

@@ -382,12 +382,13 @@ class Environment:
         
     def get_state_vector(self, agent):
         """
-        Decentralized state vector for the agent (7-dim) (normalized)
+        Decentralized state vector for the agent (8-dim) (normalized)
         - Local agent density (neighbors within communication radius)
         - Agent's own pose (x, y)
         - Agent's velocity (vx, vy)
         - Foraging/returning state (binary)
         - Found goals progress
+        - Pheromones detected
         """
         state = []
 
@@ -416,6 +417,12 @@ class Environment:
         progress_norm = (progress_sigmoid - 0.5) * 2 # rescaled to [0,1]
         progress_norm = np.clip(progress_norm, 0.0, 1.0)
         state.append(progress_norm)
+
+        # 6. Pheromones detected
+        num_pheromones = len(agent.pheromone_map)
+        num_pheromones_log = np.log1p(num_pheromones) / 50.0  # adjust 50.0 depending on expected max
+        num_pheromones_norm = np.clip(num_pheromones_log, 0.0, 1.0)
+        state.append(num_pheromones_norm)
 
         return np.array(state, dtype=np.float32)
 
