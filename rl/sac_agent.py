@@ -48,7 +48,8 @@ class AgentSAC:
 
     def select_lambda(self, current_time):
         obs = self.env.state
-        action, _ = self.model.predict(obs, deterministic=False)
+        deterministic = not TRAINING
+        action, _ = self.model.predict(obs, deterministic=deterministic)
         lambda_value = float(action[0])
 
         # Step environment
@@ -62,12 +63,13 @@ class AgentSAC:
 
         # Add to replay buffer
         # print(f"State vector shape: {obs.shape}, Reward: {reward}")
-        self.model.replay_buffer.add(obs, next_obs, action, reward, done, [{}])
+        if TRAINING:
+            self.model.replay_buffer.add(obs, next_obs, action, reward, done, [{}])
 
-        # Train every N steps
-        self.training_step += 1
-        if self.training_step % self.training_interval == 0:
-            self.model.train(batch_size=256, gradient_steps=1)
+            # Train every N steps
+            self.training_step += 1
+            if self.training_step % self.training_interval == 0:
+                self.model.train(batch_size=256, gradient_steps=1)
 
         return lambda_value
 
