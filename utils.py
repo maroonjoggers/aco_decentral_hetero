@@ -9,7 +9,6 @@ TIMESTEP_SIZE = 0.033 # Robotarium default timestep (seconds)
 # Environment parameters
 HOME_LOCATION = [0.0, 0.0] # [x, y] - Example home location at the center
 FOOD_LOCATIONS = [[1.0, 0.5], [-1.0, -0.5], [-1.5,-0.8], [1.5,-0.8], [-1.5,0.8], [1.5,0.8]] # Example food locations - list of [x, y]
-FOOD_LOCATIONS = []
 OBSTACLE_LOCATIONS = [
     {"shape": "circle", "center": [0.5, 0.0], "radius": 0.15},
     {"shape": "circle", "center": [-0.5, 0.0], "radius": 0.15},
@@ -44,7 +43,7 @@ HEADING_STD = np.pi/6
 
 PLOTTING = True
 
-WITH_LAMBDA = True
+WITH_LAMBDA = False
 PLOT_LAMBDA = False
 TRAINING_INTERVAL = 45 # steps, so every x*0.033 sec
 
