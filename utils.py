@@ -41,13 +41,13 @@ RANDOM_REDIRECTION_RATE = 5.0
 RANDOM_REDIRECTION_LIMITS = [0.0, 2*np.pi/3]
 HEADING_STD = np.pi/6
 
-PLOTTING = False
+PLOTTING = True
 
 WITH_LAMBDA = True
 PLOT_LAMBDA = True
 TRAINING_INTERVAL = 60 # steps, so every x*0.033 sec
 TRAINING = True
-USE_CHECKPOINT = True
+USE_CHECKPOINT = False
 TRAINING_EPOCHS = 50
 
 # --- Heterogeneous Agent Trait Profiles ---

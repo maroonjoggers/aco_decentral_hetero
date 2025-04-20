@@ -54,8 +54,8 @@ class Controller:                                                       #TODO: I
                 agent = self.environment.agents[agent_index]
                 return self.environment.get_state_vector(agent)
 
-            def compute_reward_fn(state, lambda_value):
-                return compute_reward(state, lambda_value)
+            def compute_reward_fn(state, lambda_value, prev_lambda):
+                return compute_reward(state, lambda_value, prev_lambda)
 
             # Initialize RL agent
             rl_agent = AgentSAC(

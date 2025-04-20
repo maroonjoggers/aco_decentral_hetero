@@ -31,6 +31,8 @@ class LambdaEnv(gym.Env):
 
         self.state = initial_state
 
+        self.prev_lambda = None
+
 
     def reset(self):
         # Reset environment state
@@ -40,13 +42,16 @@ class LambdaEnv(gym.Env):
 
     def step(self, action, current_time):
         lambda_value = float(action[0])  # Convert action to scalar
+        lambda_value = np.clip(lambda_value, 0.05, 0.95)
+
 
         # Update state and compute reward
         next_state = self.get_state_fn()
-        reward = self.compute_reward_fn(next_state, lambda_value)
+        reward = self.compute_reward_fn(next_state, lambda_value, self.prev_lambda)
 
         done = current_time >= MAX_TIME  # Episode end condition, optional
 
         self.state = next_state
+        self.prev_lambda = lambda_value
 
         return np.array(next_state, dtype=np.float32), reward, done, {}

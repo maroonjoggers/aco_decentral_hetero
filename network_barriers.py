@@ -744,3 +744,155 @@ def network_barriers_with_obstacles(U, X, env, lambda_values, use_lambda):
     result = solvers.qp(matrix(P), matrix(f), matrix(A), matrix(b))['x']            #use H for no lambda, P for lambda
 
     return np.reshape(result, (2, N), order='F')
+
+
+def network_barriers_with_obstacles_safe(U, X, env, lambda_values, use_lambda):
+    safety_radius = 0.17
+    barrier_gain = 100
+    boundary_points = np.array([-1.6, 1.6, -1.0, 1.0])
+    magnitude_limit = 0.2
+
+    # Initialize some variables for computational savings
+    N = U.shape[1]
+    num_constraints = int(comb(N, 2)) + 4*N
+    A = np.zeros((num_constraints, 2*N))
+    b = np.zeros(num_constraints)
+    H = 2*np.identity(2*N)
+
+    count = 0
+    for i in range(N-1):
+        for j in range(i+1, N):
+            error = X[:, i] - X[:, j]
+            h = (error[0]*error[0] + error[1]*error[1]) - np.power(safety_radius, 2)
+            h = max(h, 1e-4)
+
+            A[count, (2*i, 2*i+1)] = -2*error
+            A[count, (2*j, 2*j+1)] = 2*error
+            b[count] = barrier_gain*np.power(h, 3)
+            count += 1
+
+    for k in range(N):
+        #Pos Y
+        h = boundary_points[3] - safety_radius/2 - X[1,k]
+        h = max(h, 1e-4)
+        A[count, (2*k, 2*k+1)] = np.array([0,1])
+        b[count] = 0.4*barrier_gain*h**3
+        count += 1
+
+        #Neg Y
+        h = -boundary_points[2] - safety_radius/2 + X[1,k]
+        h = max(h, 1e-4)
+        A[count, (2*k, 2*k+1)] = -np.array([0,1])
+        b[count] = 0.4*barrier_gain*h**3
+        count += 1
+
+        #Pos X
+        h = boundary_points[1] - safety_radius/2 - X[0,k]
+        h = max(h, 1e-4)
+        A[count, (2*k, 2*k+1)] = np.array([1,0])
+        b[count] = 0.4*barrier_gain*h**3
+        count += 1
+
+        #Neg X
+        h = -boundary_points[0] - safety_radius/2 + X[0,k]
+        h = max(h, 1e-4)
+        A[count, (2*k, 2*k+1)] = -np.array([1,0])
+        b[count] = 0.4*barrier_gain*h**3
+        count += 1
+
+    #NETWORK BARRIERS
+    radii = utils.communication_radius_list()
+    GAMMA_network = 10.0
+
+    returning_agents_indices = []
+    for agent in env.agents:
+        if agent.state == "Returning":
+            returning_agents_indices.append(agent.id)
+
+    A_network = np.zeros((N, 2*N))
+    b_network = np.zeros(N)
+
+    for i, row in enumerate(A_network):
+        pos_i = X[:,i].reshape(2,1)
+        diffs = X - pos_i
+        dists = np.linalg.norm(diffs, axis=0)
+        dists[i] = np.inf
+        for idx in returning_agents_indices:
+            dists[idx] = np.inf
+
+        j = np.argmin(dists)
+
+        ACTIVATION_THRESHOLD = radii[i] / 1.2
+
+        if dists[j] <= radii[i] and i not in returning_agents_indices and dists[j] >= ACTIVATION_THRESHOLD:
+            h = radii[i]**2 - dists[j]**2
+            h = max(h, 1e-4)
+            b_network[i] = -GAMMA_network*h**3
+
+            A_network[i, i*2] = 2*(X[0,i]-X[0,j])
+            A_network[i, i*2 + 1] = 2*(X[1,i]-X[1,j])
+            A_network[i, j*2] = -2*(X[0,i]-X[0,j])
+            A_network[i, j*2 + 1] = -2*(X[1,i]-X[1,j])
+
+    #OBSTACLE BARRIERS
+    num_obstacles = len(utils.OBSTACLE_LOCATIONS)
+    num_obstacle_constraints = N*num_obstacles
+
+    A_ob = np.zeros((num_obstacle_constraints, 2*N))
+    b_ob = np.zeros((num_obstacle_constraints))
+
+    ob_barrier_gain = barrier_gain
+
+    count = 0
+    for i in range(N):
+        for j in range(num_obstacles):
+            ob_x, ob_y = utils.OBSTACLE_LOCATIONS[j]["center"]
+            sr = (safety_radius + utils.OBSTACLE_LOCATIONS[j]["radius"])/2
+
+            h = (X[0,i] - ob_x)**2 + (X[1,i] - ob_y)**2 - sr**2
+            h = max(h, 1e-4)
+            b_ob[count] = ob_barrier_gain*h**3
+            A_ob[count, 2*i]   = -2*(X[0,i] - ob_x)
+            A_ob[count, 2*i+1] = -2*(X[1,i] - ob_y)
+            count += 1
+
+    A = matrix(np.vstack((A, A_network, A_ob)))
+    b = matrix(np.hstack((b, b_network, b_ob)))
+
+    if use_lambda:
+        total_vars = 2 * N
+        P = np.zeros((total_vars, total_vars))
+
+        for i in range(N):
+            lambda_i = lambda_values[i]
+            u_ph_i = U[:, i].reshape(2, 1)
+
+            P[2*i : 2*(i+1), 2*i : 2*(i+1)] += 2 * lambda_i * np.eye(2)
+            Q_i = np.outer(u_ph_i, u_ph_i)
+            P[2*i : 2*(i+1), 2*i : 2*(i+1)] += 2 * (1 - lambda_i) * Q_i
+
+        P += 1e-6 * np.eye(total_vars)
+    else:
+        P = H
+
+    norms = np.linalg.norm(U, 2, 0)
+    idxs_to_normalize = (norms > magnitude_limit)
+    U[:, idxs_to_normalize] *= magnitude_limit/norms[idxs_to_normalize]
+
+    f = -2*np.reshape(U, (2*N,1), order='F')
+    b = np.reshape(b, (len(b),1), order='F')
+
+    # solvers.options['abstol'] = 1e-10
+    # solvers.options['reltol'] = 1e-10
+    # solvers.options['feastol'] = 1e-10
+
+    result = solvers.qp(matrix(P), matrix(f), matrix(A), matrix(b))
+
+    # Check max constraint residual to fallback if needed
+    residual = np.max(np.array(A @ np.array(result['x']).flatten() - b))
+    if residual > 1e-5:
+        print(f"[QP fallback] Constraint violation detected: {residual:.2e}, using fallback")
+        f_fallback = -2 * np.reshape(U, (2*N,), order='F')
+        result = solvers.qp(matrix(H), matrix(f_fallback), matrix(A), matrix(b))
+
+    return np.reshape(result['x'], (2, N), order='F')

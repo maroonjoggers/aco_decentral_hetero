@@ -4,6 +4,7 @@ from .lambda_env import LambdaEnv
 from stable_baselines3.common.logger import configure
 import torch
 from utils import USE_CHECKPOINT, TRAINING
+import numpy as np
 
 
 class AgentSAC:
@@ -51,6 +52,8 @@ class AgentSAC:
         deterministic = not TRAINING
         action, _ = self.model.predict(obs, deterministic=deterministic)
         lambda_value = float(action[0])
+        lambda_value = np.clip(lambda_value, 0.05, 0.95)
+
 
         # Step environment
         next_obs, reward, done, _ = self.env.step(action, current_time)
