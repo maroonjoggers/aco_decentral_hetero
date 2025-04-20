@@ -19,6 +19,8 @@ from network_barriers import *
 from rl.plot_lambda import plot_all_agents
 
 import os
+import csv
+
 def main():
     # --- 1. Robotarium Initialization ---
     # Parameters from utils.py
@@ -59,11 +61,25 @@ def main():
     """RL Episodes Tracking"""
     episode_counter_path = "models/episode_counter.txt"
     start_episode = 1
-    if os.path.exists(episode_counter_path):
+    if os.path.exists(episode_counter_path) and USE_CHECKPOINT:
         with open(episode_counter_path, "r") as f:
             start_episode = int(f.read()) + 1
 
     print(f"=== Starting Episode {start_episode} ===")
+
+    episode_tasks_path = "logs/tasks_completed_log.csv"
+    os.makedirs("logs", exist_ok=True)
+
+    if not USE_CHECKPOINT and os.path.exists(episode_tasks_path):
+        open(episode_tasks_path, 'w').close()  # Clear the file
+
+    episode_log_file = open(episode_tasks_path, mode='a', newline='')
+    episode_logger = csv.writer(episode_log_file)
+
+    # Write header if file doesn't exist yet
+    if not os.path.exists(episode_tasks_path):
+        episode_logger.writerow(["Episode", "Tasks_Completed"])
+
 
     # --- 4. Initialize Visualization ---
     # Use Robotarium's figure and axes
@@ -195,6 +211,8 @@ def main():
             break
 
     print("YAY! TASKS COMPLETED: " + str(env.tasks_completed))
+    episode_logger.writerow([start_episode, env.tasks_completed])
+    episode_log_file.close()
 
     # --- 6. Experiment End, RL plots, Saving, and Cleanup ---
     print(f"=== Episode {start_episode} complete! ===")

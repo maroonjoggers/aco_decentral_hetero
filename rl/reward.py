@@ -15,7 +15,7 @@ def compute_reward(state_vector, lambda_value):
     reward_follow = (1 - local_density) * lambda_value * follow_gain
 
     # Reward 2: avoidance encouragement when crowded
-    avoid_gain = 1.5
+    avoid_gain = 1.2
     reward_avoid = local_density * (1 - lambda_value) * avoid_gain
 
     # Reward 3: smooth motion or velocity alignment reward
@@ -32,7 +32,7 @@ def compute_reward(state_vector, lambda_value):
     stagnation_penalty = - stagnation_penalty_scale * max(0.0, (min_speed_threshold - speed))
 
     # Encourage exploration if few pheromones detected
-    exploration_gain = 0.8
+    exploration_gain = 0.5
     reward_exploration = (1 - num_pheromones) * (1 - lambda_value) * exploration_gain
 
 
