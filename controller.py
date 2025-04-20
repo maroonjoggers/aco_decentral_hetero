@@ -96,7 +96,7 @@ class Controller:                                                       #TODO: I
                 # 2. Pheromone Update (Laying own pheromones and decay)
                 agent = self.environment.agents[i]
                 # Check for obstacles and lay avoidance pheromones if needed
-                nearby_obstacles, obstacle_angle = self.environment.get_nearby_obstacles(agent.pose[:2], agent.sensing_radius)
+                #nearby_obstacles, obstacle_angle = self.environment.get_nearby_obstacles(agent.pose[:2], agent.sensing_radius)
 
                 agent.update_pheromone_map_own(self.environment)    # Lay pheromones based on agent's state and decay existing
                 self.previous_time = current_time

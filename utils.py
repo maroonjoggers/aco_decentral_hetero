@@ -43,7 +43,7 @@ HEADING_STD = np.pi/6
 
 PLOTTING = True
 
-WITH_LAMBDA = False
+WITH_LAMBDA = True
 PLOT_LAMBDA = False
 TRAINING_INTERVAL = 45 # steps, so every x*0.033 sec
 

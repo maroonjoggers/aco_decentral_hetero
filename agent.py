@@ -81,6 +81,40 @@ class Agent:
         elif self.state == "Returning":
             pheromone_type = "To Food"
         
+        # if avoidance:
+        #     pheromone_type = "Avoidance"
+
+        if pheromone_type:
+            if pheromone_type != "Avoidance":
+                if USE_PHEROMONE_LAYING_OFFSET:
+                    ph_x = self.pose[0] - np.sin(self.pose[2]) * PHEROMONE_LAYING_OFFSET
+                    ph_y = self.pose[1] + np.cos(self.pose[2]) * PHEROMONE_LAYING_OFFSET
+                    ph_location = [ph_x, ph_y]
+                else:
+                    ph_location = [self.pose[0], self.pose[1]]
+                ph_direction = angle_wrapping(np.pi+self.pose[2])
+            else:
+                # ph_x = self.pose[0] - np.cos(avoidance_angle) * AVOID_PHEROMONE_LAYING_OFFSET
+                # ph_y = self.pose[1] - np.sin(avoidance_angle) * AVOID_PHEROMONE_LAYING_OFFSET
+                # ph_location = [ph_x, ph_y]
+                # ph_direction = angle_wrapping(avoidance_angle+np.pi)
+                pass
+            
+            pheromone = environment.create_pheromone(
+                agent_id=self.id,
+                type=pheromone_type,
+                location=ph_location,
+                direction=ph_direction,        #Reverse the direction  
+                strength=self.initial_pheromone_strength,
+                lifeTime=self.pheromone_lifetime
+            )
+
+            # Add pheromone to agent's local pheromone map
+            self.pheromone_map[pheromone.id] = pheromone
+            #print(f"Agent {self.id} added {pheromone_type} pheromone to local map at {self.pose[:2]}")
+
+            # Add to the environment
+            environment.add_pheromone(pheromone)  
 
         # --- Pheromone Decay for the agent's local pheromone map ---
         updated_pheromone_map = {}
