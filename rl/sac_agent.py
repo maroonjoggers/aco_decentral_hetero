@@ -15,6 +15,8 @@ class AgentSAC:
         self.logger = logger
         self.episode_reward = 0.0
 
+        self.prev_lambda = None
+
         self.env = LambdaEnv(get_state_fn, compute_reward_fn)
         self.model = SAC(
             "MlpPolicy",
@@ -52,7 +54,11 @@ class AgentSAC:
         deterministic = not TRAINING
         action, _ = self.model.predict(obs, deterministic=deterministic)
         lambda_value = float(action[0])
+
+        alpha = 0.4  # smoothing factor, smaller = smoother
+        lambda_value = (1 - alpha) * self.prev_lambda + alpha * lambda_value
         lambda_value = np.clip(lambda_value, 0.05, 0.95)
+        self.prev_lambda = lambda_value
 
 
         # Step environment
