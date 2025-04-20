@@ -36,7 +36,7 @@ def main():
 
     # --- 2. Barrier Certificates (for collision avoidance) ---
     # Barrier certificate for single integrator dynamics - adjust parameters as needed
-    si_barrier_cert = create_single_integrator_barrier_certificate_with_boundary(barrier_gain=100, safety_radius=0.2) # Example parameters
+    # si_barrier_cert = create_single_integrator_barrier_certificate_with_boundary(barrier_gain=100, safety_radius=0.2) # Example parameters
 
     # --- 3. Initialize Environment and Controller ---
     # Instantiate Environment with parameters from utils.py

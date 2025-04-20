@@ -97,11 +97,8 @@ class Controller:                                                       #TODO: I
                 agent = self.environment.agents[i]
                 # Check for obstacles and lay avoidance pheromones if needed
                 nearby_obstacles, obstacle_angle = self.environment.get_nearby_obstacles(agent.pose[:2], agent.sensing_radius)
-                nearby_hazards = self.environment.get_nearby_hazards(agent.pose[:2], agent.sensing_radius)
-                if nearby_obstacles or nearby_hazards:
-                    agent.update_pheromone_map_own(self.environment, avoidance=True, avoidance_angle=obstacle_angle)
-                else:
-                    agent.update_pheromone_map_own(self.environment)    # Lay pheromones based on agent's state and decay existing
+
+                agent.update_pheromone_map_own(self.environment)    # Lay pheromones based on agent's state and decay existing
                 self.previous_time = current_time
             
             # Plot all pheromones
@@ -110,8 +107,7 @@ class Controller:                                                       #TODO: I
             
             pheromone_colors = {
                 "Return Home": "r",
-                "To Food": "k",
-                "Avoidance": "m" 
+                "To Food": "k"
             }
     
             # Get all pheromones from the dictionary
