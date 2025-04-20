@@ -116,7 +116,7 @@ class Agent:
 
             # Add pheromone to agent's local pheromone map
             self.pheromone_map[pheromone.id] = pheromone
-            print(f"Agent {self.id} added {pheromone_type} pheromone to local map at {self.pose[:2]}")
+            #print(f"Agent {self.id} added {pheromone_type} pheromone to local map at {self.pose[:2]}")
 
             # Add to the environment
             environment.add_pheromone(pheromone)  
