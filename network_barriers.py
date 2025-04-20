@@ -718,6 +718,7 @@ def network_barriers_with_obstacles(U, X, env, lambda_values, use_lambda):
 
         for i in range(N):
             lambda_i = lambda_values[i]
+            #lambda_i = 1.0
             u_ph_i = U[:, i].reshape(2, 1)  # (2, 1)
 
             # Term 1: lambda_i * (u - u_ph_i)^2 = lambda_i * (u^T u) - 2 * lambda_i * (u^T u_ph_i) + constant
@@ -727,9 +728,18 @@ def network_barriers_with_obstacles(U, X, env, lambda_values, use_lambda):
             # This expands to u^T (u_ph_i u_ph_i^T) u
             Q_i = np.outer(u_ph_i, u_ph_i)  # (2x2)
             P[2*i : 2*(i+1), 2*i : 2*(i+1)] += 2 * (1 - lambda_i) * Q_i
+
+
+            f = np.zeros((total_vars, ))
+            for i in range(N):
+                lambda_i = lambda_values[i]
+                u_ph_i = U[:, i]
+
+                # Term from expanding (u - u_ph_i)^2
+                f[2 * i : 2 * (i + 1)] = -2 * lambda_i * u_ph_i
     else:
         P = H
-
+        f = -2*np.reshape(U, (2*N,1), order='F')
 
 
 
@@ -739,7 +749,7 @@ def network_barriers_with_obstacles(U, X, env, lambda_values, use_lambda):
     idxs_to_normalize = (norms > magnitude_limit)
     U[:, idxs_to_normalize] *= magnitude_limit/norms[idxs_to_normalize]
 
-    f = -2*np.reshape(U, (2*N,1), order='F')
+    
     b = np.reshape(b, (len(b),1), order='F')
     result = solvers.qp(matrix(P), matrix(f), matrix(A), matrix(b))['x']            #use H for no lambda, P for lambda
 

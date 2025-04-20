@@ -64,14 +64,8 @@ class Agent:
                 environment.tasks_completed +=1
                 print(f"Tasks completed: {environment.tasks_completed}")
 
-        # --- Handle obstacle and hazard avoidance based on nearby_obstacles and nearby_hazards ---
-        # This might involve setting avoidance pheromones or directly influencing velocity
-        # # TODO: This won't run right now since both will be false
-        # if nearby_obstacles or nearby_hazards:
-        #     self.update_pheromone_map_own(environment=environment, avoidance=True, avoidance_angle=obstacle_angle) # Example: Lay avoidance pheromone
 
-
-    def update_pheromone_map_own(self, environment, avoidance=False, avoidance_angle = None):
+    def update_pheromone_map_own(self, environment):
         """
         Lay down pheromones based on the agent's current state and decay existing pheromones in its map.
 
@@ -87,8 +81,8 @@ class Agent:
         elif self.state == "Returning":
             pheromone_type = "To Food"
         
-        if avoidance:
-            pheromone_type = "Avoidance"
+        # if avoidance:
+        #     pheromone_type = "Avoidance"
 
         if pheromone_type:
             if pheromone_type != "Avoidance":
@@ -100,23 +94,24 @@ class Agent:
                     ph_location = [self.pose[0], self.pose[1]]
                 ph_direction = angle_wrapping(np.pi+self.pose[2])
             else:
-                ph_x = self.pose[0] - np.cos(avoidance_angle) * AVOID_PHEROMONE_LAYING_OFFSET
-                ph_y = self.pose[1] - np.sin(avoidance_angle) * AVOID_PHEROMONE_LAYING_OFFSET
-                ph_location = [ph_x, ph_y]
-                ph_direction = angle_wrapping(avoidance_angle+np.pi)
+                # ph_x = self.pose[0] - np.cos(avoidance_angle) * AVOID_PHEROMONE_LAYING_OFFSET
+                # ph_y = self.pose[1] - np.sin(avoidance_angle) * AVOID_PHEROMONE_LAYING_OFFSET
+                # ph_location = [ph_x, ph_y]
+                # ph_direction = angle_wrapping(avoidance_angle+np.pi)
+                pass
             
             pheromone = environment.create_pheromone(
                 agent_id=self.id,
                 type=pheromone_type,
                 location=ph_location,
                 direction=ph_direction,        #Reverse the direction  
-                strength=self.initial_pheromone_strength * (2.0 if avoidance else 1.0), # Make avoidance pheromones stronger?
-                lifeTime=self.pheromone_lifetime * (0.5 if avoidance else 1.0) # Make avoidance pheromones decay faster?
+                strength=self.initial_pheromone_strength,
+                lifeTime=self.pheromone_lifetime
             )
 
             # Add pheromone to agent's local pheromone map
             self.pheromone_map[pheromone.id] = pheromone
-            print(f"Agent {self.id} added {pheromone_type} pheromone to local map at {self.pose[:2]}")
+            #print(f"Agent {self.id} added {pheromone_type} pheromone to local map at {self.pose[:2]}")
 
             # Add to the environment
             environment.add_pheromone(pheromone)  
@@ -248,14 +243,14 @@ class Agent:
 
         relevant_pheromones = []
         if self.state == "Foraging":
-            # Consider "To Food" and "Avoidance" pheromones
+            # Consider "To Food" pheromones
             for p in self.pheromone_map.values():
-                if p.type in ["To Food", "Avoidance"]: # Consider Return Home to find general direction back
+                if p.type in ["To Food"]: # Consider Return Home to find general direction back
                     relevant_pheromones.append(p)
         elif self.state == "Returning":
-            # Consider "Return Home" and "Avoidance" pheromones
+            # Consider "Return Home"  pheromones
             for p in self.pheromone_map.values():
-                if p.type in ["Return Home", "Avoidance"]:
+                if p.type in ["Return Home"]:
                     relevant_pheromones.append(p)
         return relevant_pheromones
 
@@ -278,20 +273,19 @@ class Agent:
         # Scale by strength
         self._temp_vector *= pheromone.strength
         
-        if pheromone.type != "Avoidance":
-            # Calculate vector from agent to pheromone
-            self._direction_vector[0] = pheromone.location[0] - self.pose[0]
-            self._direction_vector[1] = pheromone.location[1] - self.pose[1]
-            
-            # Normalize and scale if non-zero
-            norm = np.linalg.norm(self._direction_vector)
-            if norm > 1e-6:
-                self._direction_vector *= (PHEROMONE_PULL_FACTOR * pheromone.strength / norm)
-            else:
-                self._direction_vector.fill(0)
-            
-            # Add the direction vector to the pheromone vector
-            self._temp_vector += self._direction_vector
+        # Calculate vector from agent to pheromone
+        self._direction_vector[0] = pheromone.location[0] - self.pose[0]
+        self._direction_vector[1] = pheromone.location[1] - self.pose[1]
+        
+        # Normalize and scale if non-zero
+        norm = np.linalg.norm(self._direction_vector)
+        if norm > 1e-6:
+            self._direction_vector *= (PHEROMONE_PULL_FACTOR * pheromone.strength / norm)
+        else:
+            self._direction_vector.fill(0)
+        
+        # Add the direction vector to the pheromone vector
+        self._temp_vector += self._direction_vector
         
         return self._temp_vector.copy()  # Return a copy to prevent modification of the cached vector
 
