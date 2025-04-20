@@ -10,8 +10,8 @@ TIMESTEP_SIZE = 0.033 # Robotarium default timestep (seconds)
 HOME_LOCATION = [0.0, 0.0] # [x, y] - Example home location at the center
 FOOD_LOCATIONS = [[1.0, 0.5], [-1.0, -0.5], [-1.5,-0.8], [1.5,-0.8], [-1.5,0.8], [1.5,0.8]] # Example food locations - list of [x, y]
 OBSTACLE_LOCATIONS = [
-    # {"shape": "rectangle", "center": [0.70, 0.5], "width": 0.2, "height": 0.3},
-    # {"shape": "rectangle", "center": [-0.75, 0.5], "width": 0.25, "height": 0.15},
+    {"shape": "circle", "center": [0.5, 0.0], "radius": 0.15},
+    {"shape": "circle", "center": [-0.5, 0.0], "radius": 0.15},
     # Add more obstacles here as dictionaries with "shape", "center", "width", "height"
 ]
 HAZARD_LOCATIONS = [] # Define hazards as needed (shapes and vertices) - Example: Areas to avoid
@@ -58,7 +58,7 @@ AGENT_TRAIT_PROFILES = {
         "sensing_radius": 0.2, # meters - Was 0.2 AT MIDPOINT
         "max_speed": 0.18, # m/s
         "initial_pheromone_strength": 1.0, # Initial pheromone strength for agents of this type
-        "communication_radius": 0.8, # meters           #Was 0.2 AT MIDPOINT
+        "communication_radius": 1.1, # meters           #Was 0.2 AT MIDPOINT
         "pheromone_lifetime": 150.0, # Decay rate per timestep
     },
     "Profile_Type_B": { # Example profile 2

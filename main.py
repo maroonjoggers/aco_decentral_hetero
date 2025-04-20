@@ -101,6 +101,12 @@ def main():
             height = obstacle["height"]
             rect = patches.Rectangle((center_x - width / 2, center_y - height / 2), width, height, linewidth=1, edgecolor='r', facecolor='r', alpha=0.5)
             r.axes.add_patch(rect)
+        elif obstacle["shape"] == "circle":
+            center_x, center_y = obstacle["center"]
+            radius = obstacle["radius"]
+            circle = patches.Circle((center_x, center_y), radius)
+            r.axes.add_patch(circle)
+
 
     # Initialize scatter plots for visualization elements with appropriate zorder
     circles_scatter = ax.scatter([], [], s=2, c='y', zorder=2)
@@ -182,16 +188,19 @@ def main():
 
         # b.1) Apply NETWORK barriers for staying in communication ............
         if not WITH_LAMBDA:
-            agent_velocities_si = network_barriers(agent_velocities_si_nominal, x[:2], env)
+            agent_velocities_si = network_barriers_with_obstacles(agent_velocities_si_nominal, x[:2], env, None, False)
         else:
             lambda_values = np.array([
                 controller.rl_agents[i].select_lambda(current_time)
                 for i in range(NUM_AGENTS)
             ])
-            agent_velocities_si = network_barriers_with_lambda(agent_velocities_si_nominal, x[:2], env, lambda_values)
+            agent_velocities_si = network_barriers_with_obstacles(agent_velocities_si_nominal, x[:2], env, lambda_values, True)
+
+        #agent_velocities_si = network_barriers_obstacles3(agent_velocities_si_nominal, x[:2], env, lam)
 
         # b.2) Apply SAFETY Barrier Certificates - Ensure safety (collision avoidance, boundary constraints)
-        safe_velocities_si = si_barrier_cert(agent_velocities_si, x[:2]) # Barrier certificate application
+        #safe_velocities_si = si_barrier_cert(agent_velocities_si, x[:2]) # Barrier certificate application
+        safe_velocities_si = agent_velocities_si
 
         env.update_velocities(safe_velocities_si)
 
