@@ -382,7 +382,7 @@ class Environment:
         
     def get_state_vector(self, agent):
         """
-        Decentralized state vector for the agent (8-dim) (normalized)
+        Decentralized state vector for the agent (normalized)
         - Local agent density (neighbors within communication radius)
         - Agent's own pose (x, y)
         - Agent's velocity (vx, vy)
@@ -423,6 +423,26 @@ class Environment:
         num_pheromones_log = np.log1p(num_pheromones) / 50.0  # adjust 50.0 depending on expected max
         num_pheromones_norm = np.clip(num_pheromones_log, 0.0, 1.0)
         state.append(num_pheromones_norm)
+
+        # 7. Neighbors poses
+        MAX_NEIGHBORS = NUM_AGENTS - 1
+        neighbors = self.get_agents_within_communication_radius(agent, agent.communication_radius)
+        neighbors_poses = []
+
+        for n in neighbors:  # use only first N neighbors
+            norm_x_n = 2 * (n.pose[0] - x_min) / (x_max - x_min) - 1
+            norm_y_n = 2 * (n.pose[1] - y_min) / (y_max - y_min) - 1
+            neighbors_poses.append([norm_x_n, norm_y_n])
+
+        # Pad missing neighbors with ego agent's own position
+        while len(neighbors_poses) < MAX_NEIGHBORS:
+            neighbors_poses.append([norm_x, norm_y])  # placeholder
+
+        # Flatten and extend
+        for pose in neighbors_poses:
+            state.extend(pose)
+
+
 
         return np.array(state, dtype=np.float32)
 

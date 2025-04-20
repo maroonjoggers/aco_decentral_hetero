@@ -5,7 +5,8 @@ import numpy as np
 
 def compute_reward(state_vector, lambda_value, prev_lambda):
 
-    local_density, x, y, vx, vy, is_returning, progress, num_pheromones = state_vector
+    local_density, x, y, vx, vy, is_returning, progress, num_pheromones, *neighbors_poses = state_vector
+    agent_pose = np.array([x, y])
 
     # Penalize disconnection hard
     disconnection_penalty = -3.0 if local_density == 0.0 else 0.0 
@@ -43,10 +44,28 @@ def compute_reward(state_vector, lambda_value, prev_lambda):
     else:
         fast_change_penalty = 0.0
 
+    # Penalize being very close to neighbors
+    proximity_penalty = 0.0
+    proximity_threshold = 0.1  # Normalized units
+    proximity_scale = 2.0       # Strength of penalty
+    collision_threshold = 0.075 # estimate (?)
+    neighbors_pos = np.array(neighbors_poses).reshape(-1, 2)
+
+    for n_pos in neighbors_pos:
+        if np.allclose(n_pos, agent_pose):
+            continue  # Skip placeholder neighbor (same as ego position)
+        dist = np.linalg.norm(agent_pose - n_pos)
+        if dist < proximity_threshold:
+            proximity_penalty += (proximity_threshold - dist)
+        if dist < collision_threshold:
+            proximity_penalty += 4.0
+
+    proximity_penalty *= proximity_scale
 
 
     # Final reward (weight terms as needed)
     total_reward = reward_follow + reward_avoid + reward_progress + reward_exploration
-    total_reward += stagnation_penalty + disconnection_penalty + fast_change_penalty
+    total_reward += stagnation_penalty + disconnection_penalty + fast_change_penalty 
+    total_reward -= proximity_penalty
 
     return total_reward

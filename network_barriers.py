@@ -882,9 +882,9 @@ def network_barriers_with_obstacles_safe(U, X, env, lambda_values, use_lambda):
     f = -2*np.reshape(U, (2*N,1), order='F')
     b = np.reshape(b, (len(b),1), order='F')
 
-    # solvers.options['abstol'] = 1e-10
-    # solvers.options['reltol'] = 1e-10
-    # solvers.options['feastol'] = 1e-10
+    solvers.options['abstol'] = 1e-10
+    solvers.options['reltol'] = 1e-10
+    solvers.options['feastol'] = 1e-10
 
     result = solvers.qp(matrix(P), matrix(f), matrix(A), matrix(b))
 

@@ -199,8 +199,8 @@ def main():
         #agent_velocities_si = network_barriers_obstacles3(agent_velocities_si_nominal, x[:2], env, lam)
 
         # b.2) Apply SAFETY Barrier Certificates - Ensure safety (collision avoidance, boundary constraints)
-        #safe_velocities_si = si_barrier_cert(agent_velocities_si, x[:2]) # Barrier certificate application
-        safe_velocities_si = agent_velocities_si
+        safe_velocities_si = si_barrier_cert(agent_velocities_si, x[:2]) # Barrier certificate application
+        # safe_velocities_si = agent_velocities_si
 
         env.update_velocities(safe_velocities_si)
 
