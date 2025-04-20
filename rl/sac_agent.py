@@ -56,7 +56,8 @@ class AgentSAC:
         lambda_value = float(action[0])
 
         alpha = 0.4  # smoothing factor, smaller = smoother
-        lambda_value = (1 - alpha) * self.prev_lambda + alpha * lambda_value
+        if self.prev_lambda is not None:
+            lambda_value = (1 - alpha) * self.prev_lambda + alpha * lambda_value
         lambda_value = np.clip(lambda_value, 0.05, 0.95)
         self.prev_lambda = lambda_value
 

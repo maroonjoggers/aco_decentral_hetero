@@ -47,7 +47,7 @@ def compute_reward(state_vector, lambda_value, prev_lambda):
     # Penalize being very close to neighbors
     proximity_penalty = 0.0
     proximity_threshold = 0.1  # Normalized units
-    proximity_scale = 2.0       # Strength of penalty
+    proximity_scale = 2.5       # Strength of penalty
     collision_threshold = 0.075 # estimate (?)
     neighbors_pos = np.array(neighbors_poses).reshape(-1, 2)
 
