@@ -10,6 +10,7 @@ import csv
 import os
 
 from network_barriers import *
+from utils import TRAINING
 
 class Controller:                                                       #TODO: IMPLEMENT ALL NECESSARY FUNCTIONS / ... FOR RL/QP
     def __init__(self, environment):
@@ -142,5 +143,5 @@ class Controller:                                                       #TODO: I
         Close log files and save models for all RL agents.
         """
         for i, rl_agent in enumerate(self.rl_agents):
-            rl_agent.save()
+            if TRAINING: rl_agent.save()
             self.log_files[i].close()

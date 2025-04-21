@@ -42,7 +42,7 @@ class LambdaEnv(gym.Env):
 
     def step(self, action, current_time):
         lambda_value = float(action[0])  # Convert action to scalar
-        alpha = 0.4  # smoothing factor, smaller = smoother
+        alpha = 0.2  # smoothing factor, smaller = smoother
         if self.prev_lambda is not None:
             lambda_value = (1 - alpha) * self.prev_lambda + alpha * lambda_value
         lambda_value = np.clip(lambda_value, 0.05, 0.95)
