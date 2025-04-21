@@ -10,8 +10,8 @@ TIMESTEP_SIZE = 0.033 # Robotarium default timestep (seconds)
 HOME_LOCATION = [0.0, 0.0] # [x, y] - Example home location at the center
 FOOD_LOCATIONS = [[1.0, 0.5], [-1.0, -0.5], [-1.5,-0.8], [1.5,-0.8], [-1.5,0.8], [1.5,0.8]] # Example food locations - list of [x, y]
 OBSTACLE_LOCATIONS = [
-    {"shape": "circle", "center": [0.5, 0.0], "radius": 0.15},
-    {"shape": "circle", "center": [-0.5, 0.0], "radius": 0.15},
+    {"shape": "circle", "center": [0.5, 0.1], "radius": 0.125},
+    {"shape": "circle", "center": [-0.5, -0.1], "radius": 0.125},
     # Add more obstacles here as dictionaries with "shape", "center", "width", "height"
 ]
 HAZARD_LOCATIONS = [] # Define hazards as needed (shapes and vertices) - Example: Areas to avoid
@@ -20,7 +20,7 @@ HAZARD_LOCATIONS = [] # Define hazards as needed (shapes and vertices) - Example
 AGENT_RADIUS = 0.05             #Used in obstacle detection
 
 # Experiment Ends when it hts this maxout time (seconds)
-MAX_TIME = 60
+MAX_TIME = 300
 
 # INITAL CONDITIONS
 INTER_AGENT_DIST = 0.20         # Was 0.25 during the midpoint
