@@ -188,13 +188,13 @@ def main():
 
         # b.1) Apply NETWORK barriers for staying in communication ............
         if not WITH_LAMBDA:
-            agent_velocities_si = network_barriers_with_obstacles_final(agent_velocities_si_nominal, x[:2], env, None, False)
+            agent_velocities_si = network_barriers_with_obstacles(agent_velocities_si_nominal, x[:2], env, None, False)
         else:
             lambda_values = np.array([
                 controller.rl_agents[i].select_lambda(current_time)
                 for i in range(NUM_AGENTS)
             ])
-            agent_velocities_si = network_barriers_with_obstacles_final(agent_velocities_si_nominal, x[:2], env, lambda_values, True)
+            agent_velocities_si = network_barriers_with_obstacles(agent_velocities_si_nominal, x[:2], env, lambda_values, True)
 
         #agent_velocities_si = network_barriers_obstacles3(agent_velocities_si_nominal, x[:2], env, lam)
 

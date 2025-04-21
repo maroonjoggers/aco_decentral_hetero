@@ -593,7 +593,7 @@ def network_barriers_with_obstacles(U, X, env, lambda_values, use_lambda):
     safety_radius = 0.17
     barrier_gain = 100
     boundary_points = np.array([-1.6, 1.6, -1.0, 1.0])
-    magnitude_limit = 0.2
+    magnitude_limit = 0.17
 
     # Initialize some variables for computational savings
     N = U.shape[1]
